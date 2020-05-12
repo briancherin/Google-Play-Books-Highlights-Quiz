@@ -21,7 +21,7 @@ const AppHeader = (props) => {
         <AppBar position="static" elevation={0}>
             <Toolbar className={classes.toolbar}>
                 <Typography variant="h6" className={classes.title}>Play Books Notes Quiz</Typography>
-                <GoogleAuthButton authResponseHandler={props.authResponseHandler}/>
+                <GoogleAuthButton authResponseHandler={props.authResponseHandler} style = {{paddingRight: "20px"}}/>
                 <LocalLibraryIcon />
             </Toolbar>
         </AppBar>

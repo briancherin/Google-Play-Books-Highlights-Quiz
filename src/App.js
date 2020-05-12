@@ -10,12 +10,13 @@ const useStyles = makeStyles({
   mainContainer: {
     backgroundColor: "#e3f2fd",
     background: "rgb(144,202,249) linear-gradient(180deg, rgba(144,202,249,1) 20%, rgba(227,242,253,1) 100%)",
-    height: "100vh"
+    height: "100vh",
   }
 });
-
-/* const questionsList = [
-    [
+/*
+ var questionsList = [{
+   
+    titles: [
     {title: "Harry Potter and the Sorcerer's Stone",
     isCorrectAnswerChoice: true}, 
     {title: "Don't Sleep, There Are Snakes",
@@ -25,7 +26,9 @@ const useStyles = makeStyles({
     {title: "Tuesdays With Morrie",
     isCorrectAnswerChoice: false}
   ],
-  [
+  highlightText: "One can never have enough socks"}
+  ,
+  {titles: [
   {title: "2 Harry Potter and the Sorcerer's Stone",
   isCorrectAnswerChoice: true}, 
   {title: "2 Don't Sleep, There Are Snakes",
@@ -34,16 +37,19 @@ const useStyles = makeStyles({
   isCorrectAnswerChoice: false}, 
   {title: "2 Tuesdays With Morrie",
   isCorrectAnswerChoice: false}
+
 ],
+  highlightText: "Uno nunca tiene suficiente calcetines"
+},
 
-]; */
 
+]; 
+*/
 var questionsList = [];
 
 function App() {
 
   const [ correctTitle, setCorrectTitle ] = useState(""); //Change to "" when done testing
-  const [ questionObject, setQuestionObject ] = useState(questionsList[0]);
   const [ currQuestionIndex, setCurrQuestionIndex ] = useState(-1);
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ correctAnswerSelected, setCorrectAnswerSelected ] = useState(false);
@@ -63,13 +69,16 @@ function App() {
 
   /* Respones to Google sign in */
   const authResponseHandler = async (authObject) => {
-      questionsList = await getQuestionsListFromDrive(authObject, 10)
+      questionsList = await getQuestionsListFromDrive(authObject, 30, true);
       startQuiz();
   }
 
   const startQuiz = () => {
-    setCurrQuestionIndex(0);
-    setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
+    console.log(questionsList)
+    if (questionsList.length > 0) {
+      setCurrQuestionIndex(0);
+      setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
+    }
   }
 
   const resetQuizState = () => {
@@ -95,7 +104,8 @@ function App() {
 
 
   return (
-    <Grid container direction="column" className={classes.mainContainer}>
+    //nowrap: Prevent container from shifting to the side when js console is open or when text is long
+    <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
       <Grid item>
         <AppHeader authResponseHandler={authResponseHandler}/>
       </Grid>
@@ -104,12 +114,12 @@ function App() {
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
           <GameCard 
-            highlightMessage={currQuestionIndex >= 0 ? questionsList[currQuestionIndex].highlightText : "Please connect your Google account."}
+            highlightMessage={questionsList.length > 0 && currQuestionIndex >= 0 ? questionsList[currQuestionIndex].highlightText : "There are no Google Play Books notes in your account."}
             shouldShowAnswer={shouldShowAnswer}
             handleAnswerSelection={handleAnswerSelection}
             handleNextQuestion={showNextQuestion}
             incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={currQuestionIndex >= 0 ? questionsList[currQuestionIndex].titles: []}
+            possibleTitles={questionsList.length > 0 && currQuestionIndex >= 0 ? questionsList[currQuestionIndex].titles: []}
           />
         </Grid>
         <Grid item xs={false} sm={2} lg={4}/>

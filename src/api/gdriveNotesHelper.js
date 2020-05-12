@@ -25,15 +25,15 @@ export async function getQuotesList(authObject, clusterByTitle) {
 
         const bookFiles = await getFilesInFolder("Play Books Notes");
 
-        
+        console.log("total num files: " + bookFiles.length)
 
-        const numBooksToGet = 0; /* Will be sorted by most recent. maybe. */
+        const numBooksToGet = 100; /* Will be sorted by most recent. maybe. */
 
         for (let i = 0; i < numBooksToGet; i++) {
             const file = bookFiles[i];
             const bookHtml = await getFileHtml(file.id);
 
-            const bookTitle = file.name.substring(12, file.name.length-1);
+            const bookTitle = file.name.substring(12, file.name.length-1).trim();
 
             /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
             bookTitles.push(bookTitle);

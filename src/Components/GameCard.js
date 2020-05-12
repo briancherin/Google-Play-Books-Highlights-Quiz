@@ -84,7 +84,7 @@ export default function GameCard(props) {
                                         }
      
                                         {/* Answer choice text */}
-                                        <Typography  className={answerClasses}>
+                                        <Typography  className={answerClasses} align="left">
                                             {title}
                                         </Typography>
                                     </Button>
