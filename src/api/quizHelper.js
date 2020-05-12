@@ -1,22 +1,36 @@
 import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
 
-export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions) {
+export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, clusterByTitle) {
     initializeDriveApi();
 
-    const bookQuotesList = await getQuotesList(driveAuthObject);
+    const bookQuotesList = await getQuotesList(driveAuthObject, clusterByTitle);
     const bookTitles = await getTitlesList();
 
 
-
     let questionsList = [];
+    console.log(bookQuotesList);
 
     for (var i = 0; i < bookQuotesList.length && i < maxQuestions; i++) {
-        const randIndex = Math.floor(Math.random() * bookQuotesList.length);
-        const randomQuoteObject = bookQuotesList[randIndex];
-        bookQuotesList.splice(randIndex, 1); /* Don't repeat this quote in the future */
+        var randIndex = Math.floor(Math.random() * bookQuotesList.length);
+        var randomQuoteObject = bookQuotesList[randIndex];
+
+        if (clusterByTitle) { // Picked a random title from all possible titles
+            // Pick a random quote from this title
+            const randIndex2 = Math.floor(Math.random() * randomQuoteObject.quotes.length);
+            const newRandomQuoteObject = randomQuoteObject.quotes[randIndex2];
+            randomQuoteObject.quotes.splice(randIndex, 1); // Prevent future repeat (remove from list of possible quotes)
+
+            if (randomQuoteObject.quotes.length === 0) { // If used all the quotes for this book
+                bookQuotesList.splice(randIndex, 1); // Delete this title from the possible choices
+            }
+
+            randomQuoteObject = newRandomQuoteObject; // Use the selected quote
+            
+        } else {    // Picked a random quote from all possible quotes
+            randomQuoteObject.splice(randIndex, 1); /* Don't repeat this quote in the future */
+        }
 
         const { bookTitle, quoteText } = randomQuoteObject;
-
         let answerChoices = [];
 
         answerChoices.push({
@@ -40,6 +54,8 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions) {
             titles: answerChoices,
             highlightText: quoteText
         });
+
+        console.log(questionsList)
     }
 
 
@@ -59,6 +75,3 @@ function getRandomSubarray(arr, size) {
     }
     return shuffled.slice(0, size);
 }
-
-var x = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-var fiveRandomMembers = getRandomSubarray(x, 5);

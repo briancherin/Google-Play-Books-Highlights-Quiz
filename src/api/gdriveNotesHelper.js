@@ -15,7 +15,7 @@ export function getTitlesList() {
     }
 }
 
-export async function getQuotesList(authObject) {
+export async function getQuotesList(authObject, clusterByTitle) {
 
     return new Promise(async (resolve, reject) => {
         
@@ -27,7 +27,7 @@ export async function getQuotesList(authObject) {
 
         
 
-        const numBooksToGet = 50; /* Will be sorted by most recent. maybe. */
+        const numBooksToGet = 0; /* Will be sorted by most recent. maybe. */
 
         for (let i = 0; i < numBooksToGet; i++) {
             const file = bookFiles[i];
@@ -40,17 +40,36 @@ export async function getQuotesList(authObject) {
 
             const bookQuotes = getQuotesListFromHTML(bookHtml);
 
+            const quotesObjectList = [];
+            bookQuotes.forEach((quote) => {
+                quotesObjectList.push({
+                    bookTitle: bookTitle,
+                    quoteText: quote
+                })
+            });
+
             console.log(`${i + 1} out of ${numBooksToGet}`)
 
             // Prevent rate limit from being exceeded:
-            await new Promise(resolve => setTimeout(resolve, 1));
+            await new Promise(resolve => setTimeout(resolve, 0.2));
 
-            bookQuotes.forEach((quote) => {
+
+            if (clusterByTitle) {
+
                 quotesList.push({
-                    bookTitle: file.name,
-                    quoteText: quote
+                    title: bookTitle,
+                    quotes: quotesObjectList
+                })
+            } else {
+                bookQuotes.forEach((quote) => {
+                    quotesList.push({
+                        bookTitle: file.name,
+                        quoteText: quote
+                    });
                 });
-            });            
+            }
+          
+             
         }
 
         resolve(quotesList);
