@@ -40,7 +40,8 @@ export async function getFilesInFolder(folderName) {
     return new Promise((resolve, reject) => {
         window.gapi.client.drive.files.list({
             q: `mimeType != 'application/vnd.google-apps.folder' and '${folderId}' in parents`,
-            fields: "nextPageToken, files(id, name)"
+            fields: "nextPageToken, files(id, name)",
+            pageSize: 500
         }).then(function(response) {
             resolve(response.result.files);
         });
