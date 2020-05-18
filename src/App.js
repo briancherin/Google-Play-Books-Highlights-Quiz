@@ -54,6 +54,7 @@ const useStyles = makeStyles({
 var questionsList = [];
 
 function App() {
+  const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const [ correctTitle, setCorrectTitle ] = useState(""); //Change to "" when done testing
   const [ currQuestionIndex, setCurrQuestionIndex ] = useState(-1);
@@ -61,7 +62,7 @@ function App() {
   const [ correctAnswerSelected, setCorrectAnswerSelected ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
 
-  const [ loadingProgress, setLoadingProgress ] = useState(-1);
+  const [ isLoggedIn, setIsLoggedIn ] = useState(true);
 
   const classes = useStyles();
 
@@ -84,8 +85,11 @@ function App() {
   const authResponseHandler = async (authObject) => {
       if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
+        setIsLoggedIn(true);
         questionsList = await getQuestionsListFromDrive(authObject, 30, true, updateLoadingProgress);
         startQuiz();
+      } else {
+        setIsLoggedIn(false);
       }
   }
 
@@ -143,7 +147,15 @@ function App() {
           />
           : loadingProgress !== -1 ?
               <ProgressCard progress={loadingProgress}/>
-          :
+          : !isLoggedIn ?
+            <GameCard
+              highlightMessage={"Please sign in to your Google account."}
+              highlightColor={"yellow"}
+              shouldShowAnswer={shouldShowAnswer}
+              incorrectAnswersSelected={incorrectAnswersSelected}
+              possibleTitles={[]}
+            />
+          : loadingProgress === 100 && questionsList.length === 0 ?
           <GameCard
             highlightMessage={"There are no Google Play Books notes in your account."}
             highlightColor={"yellow"}
@@ -151,6 +163,8 @@ function App() {
             incorrectAnswersSelected={incorrectAnswersSelected}
             possibleTitles={[]}
           />
+          
+          : null
           }
           
         </Grid>
