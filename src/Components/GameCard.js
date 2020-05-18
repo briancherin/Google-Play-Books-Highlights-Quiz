@@ -1,11 +1,12 @@
-import React from 'react';
-import { Card, CardContent, Grid, Button } from '@material-ui/core';
+import React, { useState } from 'react';
+import { Card, CardContent, Grid, Button, IconButton, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 
 import Typography from '@material-ui/core/Typography';
 import FiberManualRecordOutlinedIcon from '@material-ui/icons/FiberManualRecordOutlined';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import NoteIcon from '@material-ui/icons/Note';
 
 
 const useStyles = makeStyles({
@@ -39,6 +40,7 @@ export default function GameCard(props) {
 
     const { shouldShowAnswer, incorrectAnswersSelected } = props;
 
+
     return(
         <Card className={classes.mainCard}>
             <CardContent>
@@ -49,6 +51,25 @@ export default function GameCard(props) {
                     <Grid item>
                         <Typography variant="h5" style={{padding:"15px", backgroundColor: props.highlightColor}}>
                             {props.highlightMessage}
+                            <br/>
+                            {/* {props.highlightNotes} */}
+                            <Grid container style={{paddingTop:"10px"}}>
+                                <Grid item style={{flex: 1}}>
+                                    <Typography style={{fontSize: 16}}>{props.highlightDate}</Typography> 
+                                </Grid>
+                                <Grid item>
+                                    {props.highlightNotes !== "" && props.highlightNotes !== undefined ?
+                                        <Tooltip arrow interactive title={props.highlightNotes}>
+                                            <IconButton disableRipple >
+                                                <NoteIcon style={{fill:"#42a5f5"}}/>
+                                            </IconButton>
+                                        </Tooltip>
+                                    : null
+                                    }
+                                    
+                                </Grid>
+                            </Grid>
+
                         </Typography>
                     </Grid>
 

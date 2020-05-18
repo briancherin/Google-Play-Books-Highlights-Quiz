@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import GameCard from './Components/GameCard';
 import AppHeader from './Components/AppHeader';
-import { Grid } from '@material-ui/core';
+import { Grid, Typography } from '@material-ui/core';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import { makeStyles } from '@material-ui/core/styles';
 import { getQuestionsListFromDrive } from './api/quizHelper';
+import ProgressCard from './Components/ProgressCard';
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -13,8 +15,8 @@ const useStyles = makeStyles({
     height: "100vh",
   }
 });
-/*
- var questionsList = [{
+
+ /* var questionsList = [{
    
     titles: [
     {title: "Harry Potter and the Sorcerer's Stone",
@@ -26,8 +28,11 @@ const useStyles = makeStyles({
     {title: "Tuesdays With Morrie",
     isCorrectAnswerChoice: false}
   ],
-  highlightText: "One can never have enough socks"},
-  highlightColor: "yellow"
+  highlightText: "One can never have enough socks",
+  highlightColor: "yellow",
+  highlightNotes: "lalalala",
+  highlightDate: "January 1, 2022"
+  }
   ,
   {titles: [
   {title: "2 Harry Potter and the Sorcerer's Stone",
@@ -44,8 +49,8 @@ const useStyles = makeStyles({
 },
 
 
-]; 
-*/
+];  */
+
 var questionsList = [];
 
 function App() {
@@ -55,6 +60,8 @@ function App() {
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ correctAnswerSelected, setCorrectAnswerSelected ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
+
+  const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const classes = useStyles();
 
@@ -68,10 +75,18 @@ function App() {
     }
   }
 
+  const updateLoadingProgress = (progress) => {
+    console.log("GOT PROGRESS: " + progress)
+    setLoadingProgress(progress);
+  }
+
   /* Respones to Google sign in */
   const authResponseHandler = async (authObject) => {
-      questionsList = await getQuestionsListFromDrive(authObject, 30, true);
-      startQuiz();
+      if (authObject && authObject.tokenObj) {
+        setLoadingProgress(0); //Initiate loading spinner
+        questionsList = await getQuestionsListFromDrive(authObject, 30, true, updateLoadingProgress);
+        startQuiz();
+      }
   }
 
   const startQuiz = () => {
@@ -118,13 +133,17 @@ function App() {
             <GameCard 
             highlightMessage={questionsList[currQuestionIndex].highlightText}
             highlightColor={questionsList[currQuestionIndex].highlightColor}
+            highlightNotes={questionsList[currQuestionIndex].highlightNotes}
+            highlightDate={questionsList[currQuestionIndex].highlightDate}
             shouldShowAnswer={shouldShowAnswer}
             handleAnswerSelection={handleAnswerSelection}
             handleNextQuestion={showNextQuestion}
             incorrectAnswersSelected={incorrectAnswersSelected}
             possibleTitles={questionsList[currQuestionIndex].titles}
           />
-          : 
+          : loadingProgress !== -1 ?
+              <ProgressCard progress={loadingProgress}/>
+          :
           <GameCard
             highlightMessage={"There are no Google Play Books notes in your account."}
             highlightColor={"yellow"}

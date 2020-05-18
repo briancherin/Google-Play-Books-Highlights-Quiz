@@ -15,7 +15,7 @@ export function getTitlesList() {
     }
 }
 
-export async function getQuotesList(authObject, clusterByTitle) {
+export async function getQuotesList(authObject, clusterByTitle, callbackUpdateProgress) {
 
     return new Promise(async (resolve, reject) => {
         
@@ -27,7 +27,7 @@ export async function getQuotesList(authObject, clusterByTitle) {
 
         console.log("total num files: " + bookFiles.length)
 
-        const numBooksToGet = 2; /* Will be sorted by most recent. maybe. */
+        const numBooksToGet = 10; /* Will be sorted by most recent. maybe. */
 
         for (let i = 0; i < numBooksToGet; i++) {
             const file = bookFiles[i];
@@ -45,11 +45,14 @@ export async function getQuotesList(authObject, clusterByTitle) {
                 quotesObjectList.push({
                     bookTitle: bookTitle,
                     quoteText: quote.quoteText,
-                    highlightColor: quote.highlightColor
+                    highlightColor: quote.highlightColor,
+                    highlightNotes: quote.highlightNotes,
+                    highlightDate: quote.highlightDate
                 })
             });
 
-            console.log(`${i + 1} out of ${numBooksToGet}`)
+            console.log(`${i + 1} out of ${numBooksToGet}`);
+            callbackUpdateProgress((i + 1) / numBooksToGet * 100);
 
             // Prevent rate limit from being exceeded:
             await new Promise(resolve => setTimeout(resolve, 0.2));
@@ -66,7 +69,9 @@ export async function getQuotesList(authObject, clusterByTitle) {
                     quotesList.push({
                         bookTitle: file.name,
                         quoteText: quote.quoteText,
-                        highlightColor: quote.highlightColor
+                        highlightColor: quote.highlightColor,
+                        highlightNotes: quote.highlightNotes,
+                        highlightDate: quote.highlightDate
                     });
                 });
             }
@@ -92,10 +97,14 @@ export function getQuotesListFromHTML(html) {
         .each((index, element)=> {
             const text = $(element).text();
             const highlightColor = getHighlightColor($(element).attr("style"))
+            const highlightNotes = getHighlightNotes($(element).parent()[0].parent)
+            const highlightDate = getHighlightDate($(element).parent()[0].parent)
             if (text !== "") {
                 quotes.push({
                     quoteText: text,
-                    highlightColor: highlightColor
+                    highlightColor: highlightColor,
+                    highlightNotes: highlightNotes,
+                    highlightDate: highlightDate
                 });
             }
         });
@@ -110,4 +119,40 @@ function getHighlightColor(styleText) {
     const color = styleText.substring(i + attr.length, i + attr.length + 7);
 
     return color;
+}
+
+/* Parent node is the <td> element which contains the highlight message, 
+    any possible notes, and the date of the highlight */
+function getHighlightNotes(parentNode) {
+    console.log(parentNode.children)
+    var children = parentNode.children;
+
+    var notes = "";
+
+    //Highlighted quote is in children[0]
+
+    if (children.length >= 5) {
+        notes += children[2].firstChild.firstChild.data
+
+    }
+
+    
+
+
+    return notes;
+}
+
+/* Parent node is the <td> element which contains the highlight message, 
+    any possible notes, and the date of the highlight */
+function getHighlightDate(parentNode) {
+    var children = parentNode.children;
+
+    if (children.length >= 2) {
+        if (children.length < 5) { // No highlight note
+            return children[2].firstChild.firstChild.data;
+        } else {
+            return children[4].firstChild.firstChild.data;
+        }
+    }
+
 }

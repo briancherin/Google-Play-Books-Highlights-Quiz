@@ -1,14 +1,13 @@
 import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
 
-export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, clusterByTitle) {
+export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, clusterByTitle, callbackUpdateProgress) {
     initializeDriveApi();
 
-    const bookQuotesList = await getQuotesList(driveAuthObject, clusterByTitle);
+    const bookQuotesList = await getQuotesList(driveAuthObject, clusterByTitle, callbackUpdateProgress);
     const bookTitles = await getTitlesList();
 
 
     let questionsList = [];
-    console.log(bookQuotesList);
 
     for (var i = 0; hasMoreQuotes(bookQuotesList, clusterByTitle) && i < maxQuestions; i++) {
         var randIndex = Math.floor(Math.random() * bookQuotesList.length);
@@ -30,7 +29,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
             randomQuoteObject.splice(randIndex, 1); /* Don't repeat this quote in the future */
         }
 
-        const { bookTitle, quoteText, highlightColor } = randomQuoteObject;
+        const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate } = randomQuoteObject;
         let answerChoices = [];
 
         answerChoices.push({
@@ -53,10 +52,11 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
         questionsList.push({
             titles: answerChoices,
             highlightText: quoteText,
-            highlightColor: highlightColor
+            highlightColor: highlightColor,
+            highlightNotes: highlightNotes,
+            highlightDate: highlightDate
         });
 
-        console.log(questionsList)
     }
 
 
@@ -70,14 +70,11 @@ function hasMoreQuotes(bookQuotesList, clusterByTitle) {
         const len = bookQuotesList.length;
         var found = false;
         for (var i = 0; i < len; i++) { /* Each obj represents the quotes for one particular book */
-            console.log(bookQuotesList[i].quotes)
             if (bookQuotesList[i].quotes.length !== 0 ) {
                 found = true;
-                console.log("set found to true")
                 break;
             }
         }
-        console.log("found = " + found);
         return found;
     } else {
         return bookQuotesList.length !== 0;
