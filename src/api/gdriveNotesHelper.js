@@ -27,7 +27,7 @@ export async function getQuotesList(authObject, clusterByTitle) {
 
         console.log("total num files: " + bookFiles.length)
 
-        const numBooksToGet = 100; /* Will be sorted by most recent. maybe. */
+        const numBooksToGet = 2; /* Will be sorted by most recent. maybe. */
 
         for (let i = 0; i < numBooksToGet; i++) {
             const file = bookFiles[i];
@@ -44,7 +44,8 @@ export async function getQuotesList(authObject, clusterByTitle) {
             bookQuotes.forEach((quote) => {
                 quotesObjectList.push({
                     bookTitle: bookTitle,
-                    quoteText: quote
+                    quoteText: quote.quoteText,
+                    highlightColor: quote.highlightColor
                 })
             });
 
@@ -64,7 +65,8 @@ export async function getQuotesList(authObject, clusterByTitle) {
                 bookQuotes.forEach((quote) => {
                     quotesList.push({
                         bookTitle: file.name,
-                        quoteText: quote
+                        quoteText: quote.quoteText,
+                        highlightColor: quote.highlightColor
                     });
                 });
             }
@@ -89,11 +91,23 @@ export function getQuotesListFromHTML(html) {
      $('body').find('table > tbody > tr > td > table > tbody > tr > td > p > span[style*="background-color"]')
         .each((index, element)=> {
             const text = $(element).text();
+            const highlightColor = getHighlightColor($(element).attr("style"))
             if (text !== "") {
-                quotes.push(text);
+                quotes.push({
+                    quoteText: text,
+                    highlightColor: highlightColor
+                });
             }
         });
 
     return quotes;
 
+}
+
+function getHighlightColor(styleText) {
+    const attr = "background-color:";
+    const i = styleText.indexOf(attr);
+    const color = styleText.substring(i + attr.length, i + attr.length + 7);
+
+    return color;
 }

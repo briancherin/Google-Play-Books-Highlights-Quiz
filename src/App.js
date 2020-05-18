@@ -26,7 +26,8 @@ const useStyles = makeStyles({
     {title: "Tuesdays With Morrie",
     isCorrectAnswerChoice: false}
   ],
-  highlightText: "One can never have enough socks"}
+  highlightText: "One can never have enough socks"},
+  highlightColor: "yellow"
   ,
   {titles: [
   {title: "2 Harry Potter and the Sorcerer's Stone",
@@ -113,14 +114,26 @@ function App() {
       <Grid item container style={{paddingTop:"5%"}}>
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          <GameCard 
-            highlightMessage={questionsList.length > 0 && currQuestionIndex >= 0 ? questionsList[currQuestionIndex].highlightText : "There are no Google Play Books notes in your account."}
+          {questionsList.length > 0 && currQuestionIndex >= 0 ? 
+            <GameCard 
+            highlightMessage={questionsList[currQuestionIndex].highlightText}
+            highlightColor={questionsList[currQuestionIndex].highlightColor}
             shouldShowAnswer={shouldShowAnswer}
             handleAnswerSelection={handleAnswerSelection}
             handleNextQuestion={showNextQuestion}
             incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={questionsList.length > 0 && currQuestionIndex >= 0 ? questionsList[currQuestionIndex].titles: []}
+            possibleTitles={questionsList[currQuestionIndex].titles}
           />
+          : 
+          <GameCard
+            highlightMessage={"There are no Google Play Books notes in your account."}
+            highlightColor={"yellow"}
+            shouldShowAnswer={shouldShowAnswer}
+            incorrectAnswersSelected={incorrectAnswersSelected}
+            possibleTitles={[]}
+          />
+          }
+          
         </Grid>
         <Grid item xs={false} sm={2} lg={4}/>
 

@@ -10,7 +10,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
     let questionsList = [];
     console.log(bookQuotesList);
 
-    for (var i = 0; i < bookQuotesList.length && i < maxQuestions; i++) {
+    for (var i = 0; hasMoreQuotes(bookQuotesList, clusterByTitle) && i < maxQuestions; i++) {
         var randIndex = Math.floor(Math.random() * bookQuotesList.length);
         var randomQuoteObject = bookQuotesList[randIndex];
 
@@ -30,7 +30,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
             randomQuoteObject.splice(randIndex, 1); /* Don't repeat this quote in the future */
         }
 
-        const { bookTitle, quoteText } = randomQuoteObject;
+        const { bookTitle, quoteText, highlightColor } = randomQuoteObject;
         let answerChoices = [];
 
         answerChoices.push({
@@ -52,7 +52,8 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 
         questionsList.push({
             titles: answerChoices,
-            highlightText: quoteText
+            highlightText: quoteText,
+            highlightColor: highlightColor
         });
 
         console.log(questionsList)
@@ -63,6 +64,25 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 
 }
 
+
+function hasMoreQuotes(bookQuotesList, clusterByTitle) {
+    if (clusterByTitle) {
+        const len = bookQuotesList.length;
+        var found = false;
+        for (var i = 0; i < len; i++) { /* Each obj represents the quotes for one particular book */
+            console.log(bookQuotesList[i].quotes)
+            if (bookQuotesList[i].quotes.length !== 0 ) {
+                found = true;
+                console.log("set found to true")
+                break;
+            }
+        }
+        console.log("found = " + found);
+        return found;
+    } else {
+        return bookQuotesList.length !== 0;
+    }
+}
 
 /* Copied from https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array */
 function getRandomSubarray(arr, size) {
@@ -75,3 +95,5 @@ function getRandomSubarray(arr, size) {
     }
     return shuffled.slice(0, size);
 }
+
+

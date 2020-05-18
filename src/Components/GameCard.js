@@ -47,8 +47,8 @@ export default function GameCard(props) {
 
                     {/* Question area */}
                     <Grid item>
-                        <Typography variant="h5" style={{padding:"15px"}}>
-                            <mark>{props.highlightMessage}</mark>
+                        <Typography variant="h5" style={{padding:"15px", backgroundColor: props.highlightColor}}>
+                            {props.highlightMessage}
                         </Typography>
                     </Grid>
 
