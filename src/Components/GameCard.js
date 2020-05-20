@@ -42,24 +42,24 @@ export default function GameCard(props) {
 
 
     return(
-        <Card className={classes.mainCard}>
+        <Card className={classes.mainCard} style={{height:"100%", display:"inline-block"}}>
             <CardContent>
 
-                <Grid container direction="column">
+                <Grid container direction="column" >
 
                     {/* Question area */}
                     <Grid item>
-                        <Typography variant="h5" style={{padding:"15px", backgroundColor: props.highlightColor}}>
+                        <div >
+                        <Typography variant="h5" style={{padding:"15px", height:"25vh", overflow:"auto", backgroundColor: props.highlightColor}}>
                             {props.highlightMessage}
                             <br/>
-                            {/* {props.highlightNotes} */}
                             <Grid container style={{paddingTop:"10px"}}>
                                 <Grid item style={{flex: 1}}>
                                     <Typography style={{fontSize: 16}}>{props.highlightDate}</Typography> 
                                 </Grid>
                                 <Grid item>
                                     {props.highlightNotes !== "" && props.highlightNotes !== undefined ?
-                                        <Tooltip arrow interactive title={props.highlightNotes}>
+                                        <Tooltip  interactive title={props.highlightNotes}>
                                             <IconButton disableRipple >
                                                 <NoteIcon style={{fill:"#42a5f5"}}/>
                                             </IconButton>
@@ -71,6 +71,7 @@ export default function GameCard(props) {
                             </Grid>
 
                         </Typography>
+                        </div>
                     </Grid>
 
                     {/* Answer choices area */}
