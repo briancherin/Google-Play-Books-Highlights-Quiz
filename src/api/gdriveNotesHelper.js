@@ -1,5 +1,5 @@
 import cheerio from 'cheerio';
-import { authenticateApi, getFilesInFolder, getFileHtml, loadApi } from './gdrive';
+import { authenticateApi, getFilesInFolder, getFileHtml, loadApi, getAllFilesHtml } from './gdrive';
 
 var bookTitles = [];
 
@@ -25,20 +25,21 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
 
         const bookFiles = await getFilesInFolder("Play Books Notes");
 
-        console.log("total num files: " + bookFiles.length)
+        const htmlList = await getAllFilesHtml(bookFiles);
+        console.log("HTMLLIST:")
+        console.log(htmlList);
+        
 
-        const numBooksToGet = 10; /* Will be sorted by most recent. maybe. */
 
-        for (let i = 0; i < numBooksToGet; i++) {
-            const file = bookFiles[i];
-            const bookHtml = await getFileHtml(file.id);
-
-            const bookTitle = file.name.substring(12, file.name.length-1).trim();
+        for (let i = 0; i < htmlList.length; i++) {
+            const bookHtml = htmlList[i].html;
+            const bookTitle = htmlList[i].name.substring(12, htmlList[i].name.length-1).trim();
 
             /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
             bookTitles.push(bookTitle);
 
             const bookQuotes = getQuotesListFromHTML(bookHtml);
+            console.log("p2")
 
             const quotesObjectList = [];
             bookQuotes.forEach((quote) => {
@@ -50,12 +51,14 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
                     highlightDate: quote.highlightDate
                 })
             });
+            console.log("p3")
 
-            console.log(`${i + 1} out of ${numBooksToGet}`);
-            callbackUpdateProgress((i + 1) / numBooksToGet * 100);
+            console.log(`${i + 1} out of ${htmlList.length}`);
+            callbackUpdateProgress((i + 1) / htmlList.length * 100);
 
             // Prevent rate limit from being exceeded:
-            await new Promise(resolve => setTimeout(resolve, 0.2));
+            //await new Promise(resolve => setTimeout(resolve, 0.2));
+            console.log("p4")
 
 
             if (clusterByTitle) {
@@ -67,7 +70,7 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
             } else {
                 bookQuotes.forEach((quote) => {
                     quotesList.push({
-                        bookTitle: file.name,
+                        bookTitle: bookTitle,
                         quoteText: quote.quoteText,
                         highlightColor: quote.highlightColor,
                         highlightNotes: quote.highlightNotes,
@@ -76,6 +79,7 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
                 });
             }
           
+            console.log("p5 (end)")
              
         }
 
@@ -124,7 +128,6 @@ function getHighlightColor(styleText) {
 /* Parent node is the <td> element which contains the highlight message, 
     any possible notes, and the date of the highlight */
 function getHighlightNotes(parentNode) {
-    console.log(parentNode.children)
     var children = parentNode.children;
 
     var notes = "";

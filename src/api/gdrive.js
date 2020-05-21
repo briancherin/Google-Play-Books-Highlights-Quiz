@@ -1,3 +1,5 @@
+import async from 'async';
+
 
 export function loadApi() {
     const script = document.createElement("script");
@@ -57,4 +59,40 @@ export async function getFileHtml(fileId) {
             resolve(response.body);
         });
     })
+}
+
+/* 
+    @param fileIdList   list of file objects from which to download the html for
+                        file object: {name: <string>, id: <string>}
+    @return list where each element is an object containing the file's name and its html string
+                            object: {name: <string>, html: <string>}
+ */
+export async function getAllFilesHtml(fileList) {
+
+    return new Promise((resolve, reject) => {
+
+        const batch = window.gapi.client.newBatch();
+        let responseList = [];
+
+        fileList.forEach((fileObject) => {
+            const { name, id } = fileObject;
+
+            batch.add(
+                window.gapi.client.drive.files.export({
+                    fileId: id,
+                    mimeType: "text/html"
+                }), {callback: function (response) {
+                    responseList.push({name: name, html: response.result});
+                }}
+            );
+
+        });
+
+        batch.execute(() => {
+            resolve(responseList);
+        });        
+    })
+
+    
+
 }
