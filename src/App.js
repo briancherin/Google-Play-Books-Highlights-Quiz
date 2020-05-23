@@ -16,7 +16,10 @@ const useStyles = makeStyles({
   }
 });
 
- /* var questionsList = [{
+const DEBUG_MODE = false;
+
+if (DEBUG_MODE) {
+  var questionsList = [{
    
     titles: [
     {title: "Harry Potter and the Sorcerer's Stone",
@@ -28,10 +31,11 @@ const useStyles = makeStyles({
     {title: "Tuesdays With Morrie",
     isCorrectAnswerChoice: false}
   ],
-  highlightText: "One can never have enough socks",
+  highlightText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
   highlightColor: "yellow",
   highlightNotes: "lalalala",
-  highlightDate: "January 1, 2022"
+  highlightDate: "January 1, 2022",
+  bookLink: "book.com/page"
   }
   ,
   {titles: [
@@ -47,11 +51,11 @@ const useStyles = makeStyles({
 ],
   highlightText: "Uno nunca tiene suficiente calcetines"
 },
-
-
-];  */
-
-var questionsList = [];
+];  
+}
+if (!DEBUG_MODE) {
+  var questionsList = [];
+}
 
 function App() {
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
@@ -77,7 +81,7 @@ function App() {
   }
 
   const updateLoadingProgress = (progress) => {
-    console.log("GOT PROGRESS: " + progress)
+    console.log("HI progresss = " + progress)
     setLoadingProgress(progress);
   }
 
@@ -86,15 +90,16 @@ function App() {
       if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
-        questionsList = await getQuestionsListFromDrive(authObject, 30, true, updateLoadingProgress);
+        if (!DEBUG_MODE) {
+          questionsList = await getQuestionsListFromDrive(authObject, 30, true, updateLoadingProgress);
+        }
         startQuiz();
-      } else {
+      } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
       }
   }
 
   const startQuiz = () => {
-    console.log(questionsList)
     if (questionsList.length > 0) {
       setCurrQuestionIndex(0);
       setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
@@ -139,6 +144,7 @@ function App() {
             highlightColor={questionsList[currQuestionIndex].highlightColor}
             highlightNotes={questionsList[currQuestionIndex].highlightNotes}
             highlightDate={questionsList[currQuestionIndex].highlightDate}
+            bookLink={questionsList[currQuestionIndex].bookLink}
             shouldShowAnswer={shouldShowAnswer}
             handleAnswerSelection={handleAnswerSelection}
             handleNextQuestion={showNextQuestion}

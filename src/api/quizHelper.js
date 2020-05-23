@@ -17,7 +17,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
             // Pick a random quote from this title
             const randIndex2 = Math.floor(Math.random() * randomQuoteObject.quotes.length);
             const newRandomQuoteObject = randomQuoteObject.quotes[randIndex2];
-            randomQuoteObject.quotes.splice(randIndex, 1); // Prevent future repeat (remove from list of possible quotes)
+            randomQuoteObject.quotes.splice(randIndex2, 1); // Prevent future repeat (remove from list of possible quotes)
 
             if (randomQuoteObject.quotes.length === 0) { // If used all the quotes for this book
                 bookQuotesList.splice(randIndex, 1); // Delete this title from the possible choices
@@ -29,7 +29,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
             randomQuoteObject.splice(randIndex, 1); /* Don't repeat this quote in the future */
         }
 
-        const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate } = randomQuoteObject;
+        const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate, bookLink } = randomQuoteObject;
         let answerChoices = [];
 
         answerChoices.push({
@@ -54,7 +54,8 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
             highlightText: quoteText,
             highlightColor: highlightColor,
             highlightNotes: highlightNotes,
-            highlightDate: highlightDate
+            highlightDate: highlightDate,
+            bookLink: bookLink
         });
 
     }

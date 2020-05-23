@@ -23,9 +23,15 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
 
         var quotesList = [];
 
-        const bookFiles = await getFilesInFolder("Play Books Notes");
+        let bookFiles = await getFilesInFolder("Play Books Notes");
 
-        const htmlList = await getAllFilesHtml(bookFiles);
+        /* USING ONLY A (random) PORTION OF BOOKFILES FOR TESTING */
+        const maxFiles = 1;
+        bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
+
+        const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
+            callbackUpdateProgress(progress);
+        });
         console.log("HTMLLIST:")
         console.log(htmlList);
         
@@ -39,7 +45,6 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
             bookTitles.push(bookTitle);
 
             const bookQuotes = getQuotesListFromHTML(bookHtml);
-            console.log("p2")
 
             const quotesObjectList = [];
             bookQuotes.forEach((quote) => {
@@ -48,17 +53,16 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
                     quoteText: quote.quoteText,
                     highlightColor: quote.highlightColor,
                     highlightNotes: quote.highlightNotes,
-                    highlightDate: quote.highlightDate
+                    highlightDate: quote.highlightDate,
+                    bookLink: quote.bookLink
                 })
             });
-            console.log("p3")
 
-            console.log(`${i + 1} out of ${htmlList.length}`);
-            callbackUpdateProgress((i + 1) / htmlList.length * 100);
+            
+            //callbackUpdateProgress((i + 1) / htmlList.length * 100);
 
             // Prevent rate limit from being exceeded:
             //await new Promise(resolve => setTimeout(resolve, 0.2));
-            console.log("p4")
 
 
             if (clusterByTitle) {
@@ -74,14 +78,15 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
                         quoteText: quote.quoteText,
                         highlightColor: quote.highlightColor,
                         highlightNotes: quote.highlightNotes,
-                        highlightDate: quote.highlightDate
+                        highlightDate: quote.highlightDate,
+                        bookLink: quote.bookLink
                     });
                 });
             }
           
-            console.log("p5 (end)")
              
         }
+        console.log(quotesList)
 
         resolve(quotesList);
 
@@ -103,12 +108,14 @@ export function getQuotesListFromHTML(html) {
             const highlightColor = getHighlightColor($(element).attr("style"))
             const highlightNotes = getHighlightNotes($(element).parent()[0].parent)
             const highlightDate = getHighlightDate($(element).parent()[0].parent)
+            const bookLink = $(element).parent().parent().parent().parent().parent().find('td[colspan="1"] > p > span > a').attr("href")
             if (text !== "") {
                 quotes.push({
                     quoteText: text,
                     highlightColor: highlightColor,
                     highlightNotes: highlightNotes,
-                    highlightDate: highlightDate
+                    highlightDate: highlightDate,
+                    bookLink: bookLink
                 });
             }
         });

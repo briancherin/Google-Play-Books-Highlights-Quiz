@@ -7,6 +7,7 @@ import Typography from '@material-ui/core/Typography';
 import FiberManualRecordOutlinedIcon from '@material-ui/icons/FiberManualRecordOutlined';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import NoteIcon from '@material-ui/icons/Note';
+import BookLink from './BookLink';
 
 
 const useStyles = makeStyles({
@@ -91,25 +92,36 @@ export default function GameCard(props) {
                             })
 
                             return(
-                                <Grid item key={title}>
-                                    <Button disableRipple fullWidth={true} style={{justifyContent:"start"}}
-                                        onClick={() => props.handleAnswerSelection(title)}>
-                                        
-                                        {/* Circle icon */}
+                                <Grid container key={title}>
+                                    {/* Answer choice */}
+                                    <Grid item style={{flex:1}}>
+                                        <Button disableRipple fullWidth={true} style={{justifyContent:"start"}}
+                                            onClick={() => props.handleAnswerSelection(title)}>
+                                            
+                                            {/* Circle icon */}
+                                            {(isCorrectAnswerChoice && shouldShowAnswer) 
+                                                ? <FiberManualRecordIcon style={{fill:"green"}}/> 
+                                                :
+                                                    (incorrectAnswersSelected.includes(title))
+                                                    ?
+                                                        <FiberManualRecordIcon style={{fill:"red"}}/>
+                                                    : <FiberManualRecordOutlinedIcon />
+                                            }
+        
+                                            {/* Answer choice text */}
+                                            <Typography  className={answerClasses} align="left">
+                                                {title}
+                                            </Typography>
+                                                
+                                        </Button>
+                                    </Grid>
+                                    {/* Link to highlight Play Books */}
+                                    <Grid item>
                                         {(isCorrectAnswerChoice && shouldShowAnswer) 
-                                            ? <FiberManualRecordIcon style={{fill:"green"}}/> 
-                                            :
-                                                (incorrectAnswersSelected.includes(title))
-                                                ?
-                                                    <FiberManualRecordIcon style={{fill:"red"}}/>
-                                                : <FiberManualRecordOutlinedIcon />
-                                        }
-     
-                                        {/* Answer choice text */}
-                                        <Typography  className={answerClasses} align="left">
-                                            {title}
-                                        </Typography>
-                                    </Button>
+                                            ? <BookLink url={props.bookLink} />
+                                            : null
+                                            }
+                                    </Grid>
                                 </Grid>
                             );
                         }) : null}
