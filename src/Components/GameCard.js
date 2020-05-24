@@ -35,11 +35,19 @@ const useStyles = makeStyles({
 
 });
 
+const SHOW_DATE = "Show date";
+
 export default function GameCard(props) {
 
     const classes = useStyles();
 
     const { shouldShowAnswer, incorrectAnswersSelected } = props;
+
+    const [ dateText, setDateText ] = useState(SHOW_DATE)
+
+    const resetDateText = () => {
+        setDateText(SHOW_DATE)
+    }
 
 
     return(
@@ -56,7 +64,7 @@ export default function GameCard(props) {
                             <br/>
                             <Grid container style={{paddingTop:"10px"}}>
                                 <Grid item style={{flex: 1}}>
-                                    <Typography style={{fontSize: 16}}>{props.highlightDate}</Typography> 
+                                    <Typography style={{fontSize: 14, fontStyle: "italic", cursor: "pointer"}} onClick={() => setDateText(props.highlightDate)}>{dateText}</Typography> 
                                 </Grid>
                                 <Grid item>
                                     {props.highlightNotes !== "" && props.highlightNotes !== undefined ?
@@ -134,7 +142,10 @@ export default function GameCard(props) {
                                 Good job!
                             </Typography>
                             <Button disableRipple variant="contained" style={{textTransform:"none"}}
-                                onClick={() => props.handleNextQuestion()}
+                                onClick={() => {
+                                    props.handleNextQuestion();
+                                    resetDateText();
+                                }}
                             >
                                 <Typography>Next Question</Typography>
                             </Button>
