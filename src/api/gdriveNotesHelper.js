@@ -15,7 +15,7 @@ export function getTitlesList() {
     }
 }
 
-export async function getQuotesList(authObject, clusterByTitle, callbackUpdateProgress) {
+export async function getQuotesList(authObject, callbackUpdateProgress) {
 
     return new Promise(async (resolve, reject) => {
         
@@ -26,8 +26,8 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
         let bookFiles = await getFilesInFolder("Play Books Notes");
 
         /* USING ONLY A (random) PORTION OF BOOKFILES FOR TESTING */
-        const maxFiles = 1;
-        bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
+        const maxFiles = bookFiles.length;
+        if (maxFiles !== bookFiles.length) bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
 
         const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
             callbackUpdateProgress(progress);
@@ -58,32 +58,13 @@ export async function getQuotesList(authObject, clusterByTitle, callbackUpdatePr
                 })
             });
 
+
+
+            quotesList.push({
+                title: bookTitle,
+                quotes: quotesObjectList
+            })
             
-            //callbackUpdateProgress((i + 1) / htmlList.length * 100);
-
-            // Prevent rate limit from being exceeded:
-            //await new Promise(resolve => setTimeout(resolve, 0.2));
-
-
-            if (clusterByTitle) {
-
-                quotesList.push({
-                    title: bookTitle,
-                    quotes: quotesObjectList
-                })
-            } else {
-                bookQuotes.forEach((quote) => {
-                    quotesList.push({
-                        bookTitle: bookTitle,
-                        quoteText: quote.quoteText,
-                        highlightColor: quote.highlightColor,
-                        highlightNotes: quote.highlightNotes,
-                        highlightDate: quote.highlightDate,
-                        bookLink: quote.bookLink
-                    });
-                });
-            }
-          
              
         }
         console.log(quotesList)

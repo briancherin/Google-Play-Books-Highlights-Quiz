@@ -1,19 +1,19 @@
 import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
 
-export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, clusterByTitle, callbackUpdateProgress) {
+export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, callbackUpdateProgress) {
     initializeDriveApi();
 
-    const bookQuotesList = await getQuotesList(driveAuthObject, clusterByTitle, callbackUpdateProgress);
+    const bookQuotesList = await getQuotesList(driveAuthObject, callbackUpdateProgress);
     const bookTitles = await getTitlesList();
 
 
     let questionsList = [];
 
-    for (var i = 0; hasMoreQuotes(bookQuotesList, clusterByTitle) && i < maxQuestions; i++) {
+    for (var i = 0; hasMoreQuotes(bookQuotesList) && i < maxQuestions; i++) {
         var randIndex = Math.floor(Math.random() * bookQuotesList.length);
         var randomQuoteObject = bookQuotesList[randIndex];
 
-        if (clusterByTitle) { // Picked a random title from all possible titles
+        // Picked a random title from all possible titles
             // Pick a random quote from this title
             const randIndex2 = Math.floor(Math.random() * randomQuoteObject.quotes.length);
             const newRandomQuoteObject = randomQuoteObject.quotes[randIndex2];
@@ -25,9 +25,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 
             randomQuoteObject = newRandomQuoteObject; // Use the selected quote
             
-        } else {    // Picked a random quote from all possible quotes
-            randomQuoteObject.splice(randIndex, 1); /* Don't repeat this quote in the future */
-        }
+        
 
         const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate, bookLink } = randomQuoteObject;
         let answerChoices = [];
@@ -66,8 +64,7 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 }
 
 
-function hasMoreQuotes(bookQuotesList, clusterByTitle) {
-    if (clusterByTitle) {
+function hasMoreQuotes(bookQuotesList) {
         const len = bookQuotesList.length;
         var found = false;
         for (var i = 0; i < len; i++) { /* Each obj represents the quotes for one particular book */
@@ -77,9 +74,7 @@ function hasMoreQuotes(bookQuotesList, clusterByTitle) {
             }
         }
         return found;
-    } else {
-        return bookQuotesList.length !== 0;
-    }
+    
 }
 
 /* Copied from https://stackoverflow.com/questions/11935175/sampling-a-random-subset-from-an-array */

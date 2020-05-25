@@ -91,7 +91,7 @@ function App() {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
         if (!DEBUG_MODE) {
-          questionsList = await getQuestionsListFromDrive(authObject, 30, true, updateLoadingProgress);
+          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress);
         }
         startQuiz();
       } else if (!DEBUG_MODE) {

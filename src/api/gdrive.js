@@ -50,32 +50,87 @@ export async function getFilesInFolder(folderName) {
     });
 }
 
-export async function getFileHtml(fileId) {
-    return new Promise((resolve, reject) => {
-        window.gapi.client.drive.files.export({
-            fileId: fileId,
-            mimeType: "text/html"
-        }).then(function(response) {
-            resolve(response.body);
-        });
-    })
+
+export async function getFileHtmlAux(fileId) {
+    return new Promise(async (resolve, reject) => {
+
+        try {
+            const res = await window.gapi.client.drive.files.export({
+                fileId: fileId,
+                mimeType: "text/html"
+            });
+            resolve(res.body);
+        } catch(err) {
+            reject(err);
+        }
+
+
+    });
 }
+
+
+//download file html, with exponential backoff to prevent rate-limiting
+function getFileHtml(fileId) {
+    const pause = (durationSeconds) => new Promise(res => setTimeout(res, durationSeconds * 1000));
+
+    return new Promise((resolve, reject) => {
+        function download(fileId, waitTime) {
+            getFileHtmlAux(fileId)
+                .then((html) => {
+                    resolve(html);
+                })
+                .catch((err) => {
+                    if (err.status === 403) {
+                        pause(1).then(() => {
+                            const randOffset = Math.random() * 1000
+                            const newWaitTime = Math.min(5, waitTime*2 + randOffset);
+                            download(fileId, newWaitTime);
+                        })
+                    }
+                })
+        }
+        download(fileId, 1);
+    });
+}
+
 
 export async function getAllFilesHtml(fileList, progressCallback) {
 
     const maxFiles = fileList.length;
+    //const maxFiles = 5;
 
     return new Promise(async (resolve, reject) => {
 
         let responseList = [];
 
-        for (var i = 0; i < fileList.length && i < maxFiles; i++) {
-            responseList.push({
+        let promiseList = [];
+
+        for (let i = 0; i < fileList.length && i < maxFiles; i++) {
+            /* responseList.push({
                 name: fileList[i].name,
                 html: await getFileHtml(fileList[i].id)
             });
-            progressCallback(i / fileList.length * 100);
+            progressCallback(i / fileList.length * 100); */
+
+            let promise = new Promise((resolve, reject) => {
+                getFileHtml(fileList[i].id)
+                    .then((html) => {
+                        responseList.push({
+                            name: fileList[i].name,
+                            html: html
+                        });
+                        progressCallback(responseList.length / maxFiles * 100);
+                        resolve();
+                    });
+            })
+            
+            
+
+            promiseList.push(promise);
+
         }
+
+        await Promise.all(promiseList);
 
         resolve(responseList);
 
