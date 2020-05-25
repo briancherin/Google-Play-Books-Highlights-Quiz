@@ -7,7 +7,6 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
     const bookTitles = getTitlesList();
 
     return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);
-
 }
 
 function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {

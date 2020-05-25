@@ -30,56 +30,48 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
         if (maxFiles !== bookFiles.length) bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
 
         const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
-            callbackUpdateProgress(progress);
+            callbackUpdateProgress(progress); /* Update the progress bar */
         });
         
 
 
         for (let i = 0; i < htmlList.length; i++) {
             const bookHtml = htmlList[i].html;
-            const bookTitle = htmlList[i].name.substring(12, htmlList[i].name.length-1).trim();
 
-            /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
-            bookTitles.push(bookTitle);
-
+            /* Parse the html for this file and extract the list of quotes */
             const bookQuotes = getQuotesListFromHTML(bookHtml);
 
+           
+
             if (bookQuotes.length > 0) {
-                const quotesObjectList = [];
-                bookQuotes.forEach((quote) => {
-                    quotesObjectList.push({
-                        bookTitle: bookTitle,
-                        quoteText: quote.quoteText,
-                        highlightColor: quote.highlightColor,
-                        highlightNotes: quote.highlightNotes,
-                        highlightDate: quote.highlightDate,
-                        bookLink: quote.bookLink
-                    })
-                });
-
-
+ 
+                /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
+                const bookTitle = bookQuotes[0].bookTitle
+                bookTitles.push(bookTitle)
 
                 quotesList.push({
                     title: bookTitle,
-                    quotes: quotesObjectList
+                    quotes: bookQuotes
                 })
-            }
-
-            
-            
-             
+            }    
         }
 
         resolve(quotesList);
+    });
+}
 
-    })
-    
+function getTitleFromHtml(html) {
+    const $ = cheerio.load(html);
+
+    return $('body').find('table > tbody > tr > td > h1 > span').text();
 }
 
 /* @param html: html of a single file in the Play Books Notes folder */
 export function getQuotesListFromHTML(html) {
     
     const $ = cheerio.load(html);
+
+    const title = $('body').find('table > tbody > tr > td > h1 > span').text();
 
     let quotes = [];
     
@@ -90,6 +82,7 @@ export function getQuotesListFromHTML(html) {
             const highlightColor = getHighlightColor($(element).attr("style"))
             const highlightNotes = getHighlightNotes($(element).parent()[0].parent)
             const highlightDate = getHighlightDate($(element).parent()[0].parent)
+            console.log($(element))
             const bookLink = $(element).parent().parent().parent().parent().parent().find('td[colspan="1"] > p > span > a').attr("href")
             if (text !== "") {
                 quotes.push({
@@ -97,7 +90,8 @@ export function getQuotesListFromHTML(html) {
                     highlightColor: highlightColor,
                     highlightNotes: highlightNotes,
                     highlightDate: highlightDate,
-                    bookLink: bookLink
+                    bookLink: bookLink,
+                    bookTitle: title
                 });
             }
         });

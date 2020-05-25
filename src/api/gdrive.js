@@ -106,20 +106,20 @@ export async function getAllFilesHtml(fileList, progressCallback) {
         let promiseList = [];
 
         for (let i = 0; i < fileList.length && i < maxFiles; i++) {
-            /* responseList.push({
-                name: fileList[i].name,
-                html: await getFileHtml(fileList[i].id)
-            });
-            progressCallback(i / fileList.length * 100); */
+            console.log("In getAllFilesHTML, i = " + i)
 
             let promise = new Promise((resolve, reject) => {
                 getFileHtml(fileList[i].id)
                     .then((html) => {
-                        responseList.push({
+
+                        const fileObject = {
                             name: fileList[i].name,
                             html: html
-                        });
-                        progressCallback(responseList.length / maxFiles * 100);
+                        }
+
+                        responseList.push(fileObject);
+                        
+                        progressCallback(responseList.length / maxFiles * 100, fileObject);
                         resolve();
                     });
             })
@@ -132,6 +132,7 @@ export async function getAllFilesHtml(fileList, progressCallback) {
 
         await Promise.all(promiseList);
 
+        /* Once all requests have finished, resolves. */
         resolve(responseList);
 
     })
