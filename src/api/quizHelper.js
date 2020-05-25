@@ -4,48 +4,33 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
     initializeDriveApi();
 
     const bookQuotesList = await getQuotesList(driveAuthObject, callbackUpdateProgress);
-    const bookTitles = await getTitlesList();
+    const bookTitles = getTitlesList();
+
 
 
     let questionsList = [];
 
     for (var i = 0; hasMoreQuotes(bookQuotesList) && i < maxQuestions; i++) {
-        var randIndex = Math.floor(Math.random() * bookQuotesList.length);
-        var randomQuoteObject = bookQuotesList[randIndex];
+        // Pick a random title from all possible titles
+        var randTitleIndex = Math.floor(Math.random() * bookQuotesList.length);
+        var randomBookObject = bookQuotesList[randTitleIndex];
 
-        // Picked a random title from all possible titles
-            // Pick a random quote from this title
-            const randIndex2 = Math.floor(Math.random() * randomQuoteObject.quotes.length);
-            const newRandomQuoteObject = randomQuoteObject.quotes[randIndex2];
-            randomQuoteObject.quotes.splice(randIndex2, 1); // Prevent future repeat (remove from list of possible quotes)
 
-            if (randomQuoteObject.quotes.length === 0) { // If used all the quotes for this book
-                bookQuotesList.splice(randIndex, 1); // Delete this title from the possible choices
-            }
+        // Pick a random quote from this title
+        const randQuoteIndex = Math.floor(Math.random() * randomBookObject.quotes.length);
+        const randomQuoteObject = randomBookObject.quotes[randQuoteIndex]; // This will be the quote selected
 
-            randomQuoteObject = newRandomQuoteObject; // Use the selected quote
+        randomBookObject.quotes.splice(randQuoteIndex, 1); // Delete the selected quote from the original list (Prevent future repeat)
+
+        if (randomBookObject.quotes.length === 0) { // If used all the quotes for this book
+            bookQuotesList.splice(randTitleIndex, 1); // Delete this title from the possible choices
+        }
             
-        
 
         const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate, bookLink } = randomQuoteObject;
-        let answerChoices = [];
+        
+        let answerChoices = generateAnswerChoices(bookTitle, bookTitles);
 
-        answerChoices.push({
-            title: bookTitle,
-            isCorrectAnswerChoice: true
-        });
-
-        /* Get three other random book titles */
-        getRandomSubarray(bookTitles.filter((title) => title !== bookTitle), 3)
-            .forEach((title) => {
-                answerChoices.push({
-                    title: title,
-                    isCorrectAnswerChoice: false
-                })
-        });
-
-        /* Shuffle the answer choices */
-        answerChoices = getRandomSubarray(answerChoices, answerChoices.length);
 
         questionsList.push({
             titles: answerChoices,
@@ -61,6 +46,30 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 
     return questionsList;
 
+}
+
+function generateAnswerChoices(correctTitle, titlesList) {
+    let answerChoices = [];
+
+    //Add the correct answer choice to the list of answer choices
+    answerChoices.push({
+        title: correctTitle,
+        isCorrectAnswerChoice: true
+    });
+
+    /* Get three other random book titles */
+    getRandomSubarray(titlesList.filter((title) => title !== correctTitle), 3)
+    .forEach((title) => {
+        answerChoices.push({
+            title: title,
+            isCorrectAnswerChoice: false
+        })
+    });
+
+    /* Shuffle the answer choices */
+    answerChoices = getRandomSubarray(answerChoices, answerChoices.length);
+
+    return answerChoices;
 }
 
 

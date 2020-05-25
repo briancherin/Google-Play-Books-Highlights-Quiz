@@ -166,7 +166,6 @@ export async function getAllFilesHtmlWithBatchRequest(fileList, progressCallback
                     mimeType: "text/html"
                 }), {callback: function (response) {    //Callback called individually for each file downloaded
                     responseList.push({name: name, html: response.result});
-                    console.log("responseList.length = " + responseList.length)
                     progressCallback(responseList.length / fileList.length * 100);
                 }}
             );

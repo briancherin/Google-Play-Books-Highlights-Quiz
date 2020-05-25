@@ -32,8 +32,6 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
         const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
             callbackUpdateProgress(progress);
         });
-        console.log("HTMLLIST:")
-        console.log(htmlList);
         
 
 
@@ -46,28 +44,31 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
 
             const bookQuotes = getQuotesListFromHTML(bookHtml);
 
-            const quotesObjectList = [];
-            bookQuotes.forEach((quote) => {
-                quotesObjectList.push({
-                    bookTitle: bookTitle,
-                    quoteText: quote.quoteText,
-                    highlightColor: quote.highlightColor,
-                    highlightNotes: quote.highlightNotes,
-                    highlightDate: quote.highlightDate,
-                    bookLink: quote.bookLink
+            if (bookQuotes.length > 0) {
+                const quotesObjectList = [];
+                bookQuotes.forEach((quote) => {
+                    quotesObjectList.push({
+                        bookTitle: bookTitle,
+                        quoteText: quote.quoteText,
+                        highlightColor: quote.highlightColor,
+                        highlightNotes: quote.highlightNotes,
+                        highlightDate: quote.highlightDate,
+                        bookLink: quote.bookLink
+                    })
+                });
+
+
+
+                quotesList.push({
+                    title: bookTitle,
+                    quotes: quotesObjectList
                 })
-            });
+            }
 
-
-
-            quotesList.push({
-                title: bookTitle,
-                quotes: quotesObjectList
-            })
+            
             
              
         }
-        console.log(quotesList)
 
         resolve(quotesList);
 

@@ -81,7 +81,6 @@ function App() {
   }
 
   const updateLoadingProgress = (progress) => {
-    console.log("HI progresss = " + progress)
     setLoadingProgress(progress);
   }
 
