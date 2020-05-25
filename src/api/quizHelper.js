@@ -6,32 +6,25 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
     const bookQuotesList = await getQuotesList(driveAuthObject, callbackUpdateProgress);
     const bookTitles = getTitlesList();
 
+    return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);
 
+}
 
+function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {
     let questionsList = [];
 
+    /* Form the questions and answer choices, and add them to the list */
     for (var i = 0; hasMoreQuotes(bookQuotesList) && i < maxQuestions; i++) {
-        // Pick a random title from all possible titles
-        var randTitleIndex = Math.floor(Math.random() * bookQuotesList.length);
-        var randomBookObject = bookQuotesList[randTitleIndex];
-
-
-        // Pick a random quote from this title
-        const randQuoteIndex = Math.floor(Math.random() * randomBookObject.quotes.length);
-        const randomQuoteObject = randomBookObject.quotes[randQuoteIndex]; // This will be the quote selected
-
-        randomBookObject.quotes.splice(randQuoteIndex, 1); // Delete the selected quote from the original list (Prevent future repeat)
-
-        if (randomBookObject.quotes.length === 0) { // If used all the quotes for this book
-            bookQuotesList.splice(randTitleIndex, 1); // Delete this title from the possible choices
-        }
-            
+        
+        /* Select a random quote */
+        const randomQuoteObject = selectRandomQuote(bookQuotesList);
 
         const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate, bookLink } = randomQuoteObject;
         
+        /* Generate the other answer choices */
         let answerChoices = generateAnswerChoices(bookTitle, bookTitles);
 
-
+        /* Add this question to the overall list */
         questionsList.push({
             titles: answerChoices,
             highlightText: quoteText,
@@ -45,7 +38,26 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 
 
     return questionsList;
+}
 
+/* Selects a random quote. Removes the selected quote from the overall list of quotes, to prevent repeats. */
+function selectRandomQuote(bookQuotesList) {
+    // Pick a random title from all possible titles
+    var randTitleIndex = Math.floor(Math.random() * bookQuotesList.length);
+    var randomBookObject = bookQuotesList[randTitleIndex];
+
+
+    // Pick a random quote from this title
+    const randQuoteIndex = Math.floor(Math.random() * randomBookObject.quotes.length);
+    const randomQuoteObject = randomBookObject.quotes[randQuoteIndex]; // This will be the quote selected
+
+    randomBookObject.quotes.splice(randQuoteIndex, 1); // Delete the selected quote from the original list (Prevent future repeat)
+
+    if (randomBookObject.quotes.length === 0) { // If used all the quotes for this book
+        bookQuotesList.splice(randTitleIndex, 1); // Delete this title from the possible choices
+    }
+
+    return randomQuoteObject;
 }
 
 function generateAnswerChoices(correctTitle, titlesList) {
