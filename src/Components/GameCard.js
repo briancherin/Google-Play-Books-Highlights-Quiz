@@ -7,6 +7,8 @@ import Typography from '@material-ui/core/Typography';
 import FiberManualRecordOutlinedIcon from '@material-ui/icons/FiberManualRecordOutlined';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import NoteIcon from '@material-ui/icons/Note';
+import StarBorderIcon from '@material-ui/icons/StarBorder';
+import StarIcon from '@material-ui/icons/Star';
 import BookLink from './BookLink';
 
 
@@ -45,8 +47,15 @@ export default function GameCard(props) {
 
     const [ dateText, setDateText ] = useState(SHOW_DATE)
 
+    const [ isFavorited, setIsFavorited ] = useState(false);
+
     const resetDateText = () => {
         setDateText(SHOW_DATE)
+    }
+
+    const handleFavoriteClick = () => {
+        setIsFavorited(!isFavorited);
+        //TODO: Actually save or unsave
     }
 
 
@@ -67,6 +76,16 @@ export default function GameCard(props) {
                                     <Typography style={{fontSize: 14, fontStyle: "italic", cursor: "pointer"}} onClick={() => setDateText(props.highlightDate)}>{dateText}</Typography> 
                                 </Grid>
                                 <Grid item>
+                                    <Tooltip title={isFavorited ? "Remove from favorites" : "Save in favorites"}>
+                                       <IconButton disableRipple onClick={()=>handleFavoriteClick()}>
+                                        { isFavorited 
+                                        ? <StarIcon />
+                                        : <StarBorderIcon />
+                                        }
+                                        
+                                    </IconButton> 
+                                    </Tooltip>
+                                    
                                     {props.highlightNotes !== "" && props.highlightNotes !== undefined ?
                                         <Tooltip  interactive title={props.highlightNotes}>
                                             <IconButton disableRipple >
