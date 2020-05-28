@@ -28,7 +28,7 @@ const GoogleAuthButton = (props) => {
             clientId={CLIENT_ID}
             onSuccess={authResponseHandler}
             onFailure={authResponseHandler}
-            isSignedIn={true}
+            isSignedIn={false} /* If True, it will remember the login between sessions/refreshes */
             cookiePolicy={'single_host_origin'}
             scope={'https://www.googleapis.com/auth/drive.readonly'}
             discoveryDocs={'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'}

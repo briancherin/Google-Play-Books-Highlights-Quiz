@@ -1,4 +1,4 @@
-import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
+import { initializeDriveApi, getQuotesList, getTitlesList, getCachedQuotesList, getCachedTitlesList } from "./gdriveNotesHelper";
 
 export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, callbackUpdateProgress) {
     initializeDriveApi();
@@ -7,6 +7,20 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
     const bookTitles = getTitlesList();
 
     return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);
+}
+
+export function getQuestionsFromCachedQuotes(maxQuestions) {
+    const bookQuotesList = getCachedQuotesList();
+    const bookTitles = getCachedTitlesList();
+
+    console.log("bookQuotesList: ")
+    console.log(bookQuotesList);
+
+    if (bookQuotesList !== undefined && bookTitles !== undefined) {
+        return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);
+    } else {
+        return undefined;
+    }
 }
 
 function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {

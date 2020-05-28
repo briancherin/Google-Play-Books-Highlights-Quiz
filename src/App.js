@@ -5,8 +5,9 @@ import AppHeader from './Components/AppHeader';
 import { Grid, Typography } from '@material-ui/core';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import { makeStyles } from '@material-ui/core/styles';
-import { getQuestionsListFromDrive } from './api/quizHelper';
+import { getQuestionsListFromDrive, getQuestionsFromCachedQuotes } from './api/quizHelper';
 import ProgressCard from './Components/ProgressCard';
+import { LocalStorage } from './api/LocalStorage';
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -57,11 +58,14 @@ if (!DEBUG_MODE) {
   var questionsList = [];
 }
 
+questionsList = getQuestionsFromCachedQuotes(50);
+console.log(questionsList)
+
 function App() {
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const [ correctTitle, setCorrectTitle ] = useState(""); //Change to "" when done testing
-  const [ currQuestionIndex, setCurrQuestionIndex ] = useState(-1);
+  const [ currQuestionIndex, setCurrQuestionIndex ] = useState(0);
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ correctAnswerSelected, setCorrectAnswerSelected ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
@@ -71,8 +75,10 @@ function App() {
   const classes = useStyles();
 
 
+
   const handleAnswerSelection = (selectedTitle) => {
-    if (selectedTitle === correctTitle) {
+    // if (selectedTitle === correctTitle) {
+    if (questionsList[currQuestionIndex].titles.filter((titleObject) => titleObject.title === selectedTitle)[0].isCorrectAnswerChoice) {
       setShouldShowAnswer(true);
       setCorrectAnswerSelected(true);
     } else {
@@ -84,13 +90,39 @@ function App() {
     setLoadingProgress(progress);
   }
 
+  
+  const startQuiz = () => {
+    if (questionsList.length > 0) {
+      //setCurrQuestionIndex(0);
+     // setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
+    }
+  }
+
+
+  
+
+/*
+  useEffect(() => {
+    // Attempt to get the questions list using the CACHED quotes
+    questionsList = getQuestionsFromCachedQuotes(50);
+console.log(questionsList)
+
+    console.log("HI")
+    if (questionsList !== undefined) {
+      startQuiz();
+    }
+  });
+*/
+
+
   /* Respones to Google sign in */
+  /* Upon Google sign in, pull the quotes from google drive */
   const authResponseHandler = async (authObject) => {
       if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
         if (!DEBUG_MODE) {
-          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress);
+          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
         }
         startQuiz();
       } else if (!DEBUG_MODE) {
@@ -98,12 +130,6 @@ function App() {
       }
   }
 
-  const startQuiz = () => {
-    if (questionsList.length > 0) {
-      setCurrQuestionIndex(0);
-      setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
-    }
-  }
 
   const resetQuizState = () => {
     setShouldShowAnswer(false);
@@ -137,7 +163,16 @@ function App() {
       <Grid item container style={{paddingTop:"5%"}}>
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {questionsList.length > 0 && currQuestionIndex >= 0 ? 
+          {questionsList === undefined ?
+            <GameCard
+            highlightMessage={"Please sign in to your Google account."}
+            highlightColor={"yellow"}
+            shouldShowAnswer={shouldShowAnswer}
+            incorrectAnswersSelected={incorrectAnswersSelected}
+            possibleTitles={[]}
+          />
+
+          : questionsList.length > 0 && currQuestionIndex >= 0 ? 
             <GameCard 
             highlightMessage={questionsList[currQuestionIndex].highlightText}
             highlightColor={questionsList[currQuestionIndex].highlightColor}

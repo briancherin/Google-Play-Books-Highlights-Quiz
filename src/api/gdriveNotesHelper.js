@@ -1,20 +1,43 @@
 import cheerio from 'cheerio';
 import { authenticateApi, getFilesInFolder, getFileHtml, loadApi, getAllFilesHtml } from './gdrive';
 
+import { LocalStorage } from './LocalStorage';
+
 var bookTitles = [];
 
 export function initializeDriveApi() {
     loadApi();
 }
 
-export function getTitlesList() {
-    if (bookTitles.length !== 0) {
-        return bookTitles;
-    } else {
 
+
+export function getCachedQuotesList() {
+    if (LocalStorage.supports_html5_storage()) {
+        return JSON.parse(LocalStorage.get("quotesList"));
+    } else {
+        return undefined;
     }
 }
 
+export function getCachedTitlesList() {
+    return JSON.parse(LocalStorage.get("titlesList"));
+}
+
+function saveCachedTitlesList(titlesList) {
+    LocalStorage.put("titlesList", JSON.stringify(titlesList));
+}
+
+function saveCachedQuotesList(quotesList) {
+    LocalStorage.put("quotesList", JSON.stringify(quotesList));
+}
+
+
+export function getTitlesList() { //TODO: This seems bad?
+    return bookTitles;
+}
+
+
+/* Get the quotes from Google Drive */
 export async function getQuotesList(authObject, callbackUpdateProgress) {
 
     return new Promise(async (resolve, reject) => {
@@ -39,32 +62,31 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
             const bookHtml = htmlList[i].html;
 
             /* Parse the html for this file and extract the list of quotes */
-            const bookQuotes = getQuotesListFromHTML(bookHtml);
+            const bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
 
-           
+        
 
             if (bookQuotes.length > 0) {
- 
+
                 /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
                 const bookTitle = bookQuotes[0].bookTitle
                 bookTitles.push(bookTitle)
 
+                //Add all the quotes from this book to the overall list of quotes (clustered by book)
                 quotesList.push({
-                    title: bookTitle,
+                    title: bookTitle,   //Mark each quote as belonging to this particular book
                     quotes: bookQuotes
                 })
             }    
         }
 
+        saveCachedQuotesList(quotesList); // Cache the quotesList for next time
+        saveCachedTitlesList(bookTitles);
+
         resolve(quotesList);
     });
 }
 
-function getTitleFromHtml(html) {
-    const $ = cheerio.load(html);
-
-    return $('body').find('table > tbody > tr > td > h1 > span').text();
-}
 
 /* @param html: html of a single file in the Play Books Notes folder */
 export function getQuotesListFromHTML(html) {
