@@ -44,7 +44,8 @@ function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {
             highlightColor: highlightColor,
             highlightNotes: highlightNotes,
             highlightDate: highlightDate,
-            bookLink: bookLink
+            bookLink: bookLink,
+            correctAnswerTitle: bookTitle
         });
 
     }

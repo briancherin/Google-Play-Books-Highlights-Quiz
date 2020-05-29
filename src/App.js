@@ -32,11 +32,12 @@ if (DEBUG_MODE) {
     {title: "Tuesdays With Morrie",
     isCorrectAnswerChoice: false}
   ],
+  correctAnswerTitle: "Harry Potter and the Sorcerer's Stone",
   highlightText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
   highlightColor: "yellow",
   highlightNotes: "lalalala",
   highlightDate: "January 1, 2022",
-  bookLink: "book.com/page"
+  bookLink: "book.com/page",
   }
   ,
   {titles: [
@@ -64,10 +65,8 @@ console.log(questionsList)
 function App() {
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
-  const [ correctTitle, setCorrectTitle ] = useState(""); //Change to "" when done testing
   const [ currQuestionIndex, setCurrQuestionIndex ] = useState(0);
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
-  const [ correctAnswerSelected, setCorrectAnswerSelected ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
 
   const [ isLoggedIn, setIsLoggedIn ] = useState(true);
@@ -78,9 +77,8 @@ function App() {
 
   const handleAnswerSelection = (selectedTitle) => {
     // if (selectedTitle === correctTitle) {
-    if (questionsList[currQuestionIndex].titles.filter((titleObject) => titleObject.title === selectedTitle)[0].isCorrectAnswerChoice) {
+    if (selectedTitle === questionsList[currQuestionIndex].correctAnswerTitle) {
       setShouldShowAnswer(true);
-      setCorrectAnswerSelected(true);
     } else {
       setIncorrectAnswersSelected(incorrectAnswersSelected => [...incorrectAnswersSelected, selectedTitle]);
     }
@@ -90,29 +88,6 @@ function App() {
     setLoadingProgress(progress);
   }
 
-  
-  const startQuiz = () => {
-    if (questionsList.length > 0) {
-      //setCurrQuestionIndex(0);
-     // setCorrectTitle(questionsList[0].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
-    }
-  }
-
-
-  
-
-/*
-  useEffect(() => {
-    // Attempt to get the questions list using the CACHED quotes
-    questionsList = getQuestionsFromCachedQuotes(50);
-console.log(questionsList)
-
-    console.log("HI")
-    if (questionsList !== undefined) {
-      startQuiz();
-    }
-  });
-*/
 
 
   /* Respones to Google sign in */
@@ -124,7 +99,6 @@ console.log(questionsList)
         if (!DEBUG_MODE) {
           questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
         }
-        startQuiz();
       } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
       }
@@ -133,7 +107,6 @@ console.log(questionsList)
 
   const resetQuizState = () => {
     setShouldShowAnswer(false);
-    setCorrectAnswerSelected(false);
     setIncorrectAnswersSelected([]);
   }
 
@@ -146,7 +119,6 @@ console.log(questionsList)
       resetQuizState();
 
       setCurrQuestionIndex(nextQuestionIndex);
-      setCorrectTitle(questionsList[nextQuestionIndex].titles.filter((title) => title.isCorrectAnswerChoice)[0].title);
     } else {
       //TODO: Show no_more_questions message
     }
