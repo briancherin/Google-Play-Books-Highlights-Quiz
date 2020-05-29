@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, Grid, Button, IconButton, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
@@ -43,6 +43,8 @@ export default function GameCard(props) {
 
     const classes = useStyles();
 
+    const scrollRef = useRef(null);
+
     const { shouldShowAnswer, incorrectAnswersSelected } = props;
 
     const [ dateText, setDateText ] = useState(SHOW_DATE)
@@ -51,6 +53,10 @@ export default function GameCard(props) {
 
     const resetDateText = () => {
         setDateText(SHOW_DATE)
+    }
+
+    const resetScrollbar = () => {
+        scrollRef.current.scrollTop = 0;
     }
 
     const handleFavoriteClick = () => {
@@ -68,7 +74,7 @@ export default function GameCard(props) {
                     {/* Question area */}
                     <Grid item>
                         <div >
-                        <Typography variant="h5" style={{padding:"15px", height:"25vh", overflow:"auto", backgroundColor: props.highlightColor}}>
+                        <Typography ref={scrollRef} variant="h5" style={{padding:"15px", height:"25vh", overflow:"auto", backgroundColor: props.highlightColor}}>
                             {props.highlightMessage}
                             <br/>
                             <Grid container style={{paddingTop:"10px"}}>
@@ -164,6 +170,7 @@ export default function GameCard(props) {
                                 onClick={() => {
                                     props.handleNextQuestion();
                                     resetDateText();
+                                    resetScrollbar();
                                 }}
                             >
                                 <Typography>Next Question</Typography>
