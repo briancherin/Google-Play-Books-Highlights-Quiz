@@ -65,6 +65,8 @@ console.log(questionsList)
 function App() {
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
+  const [ quizShouldStart, setQuizShouldStart ] = useState(false);
+
   const [ currQuestionIndex, setCurrQuestionIndex ] = useState(0);
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
@@ -88,6 +90,11 @@ function App() {
     setLoadingProgress(progress);
   }
 
+  const clearQuizScreen = () => { //For when deleting the cached highlights. Question on screen should go away.
+    questionsList = []; 
+    resetQuizState();
+    setQuizShouldStart(false);
+  }
 
 
   /* Respones to Google sign in */
@@ -98,6 +105,8 @@ function App() {
         setIsLoggedIn(true);
         if (!DEBUG_MODE) {
           questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
+          console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
+          setQuizShouldStart(true);
         }
       } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
@@ -129,7 +138,7 @@ function App() {
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
     <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
       <Grid item>
-        <AppHeader authResponseHandler={authResponseHandler}/>
+        <AppHeader authResponseHandler={authResponseHandler} clearQuizScreen={clearQuizScreen}/>
       </Grid>
       
       <Grid item container style={{paddingTop:"5%"}}>
@@ -144,7 +153,7 @@ function App() {
             possibleTitles={[]}
           />
 
-          : questionsList.length > 0 && currQuestionIndex >= 0 ? 
+          : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ? 
             <GameCard 
             highlightMessage={questionsList[currQuestionIndex].highlightText}
             highlightColor={questionsList[currQuestionIndex].highlightColor}

@@ -31,6 +31,11 @@ function saveCachedQuotesList(quotesList) {
     LocalStorage.put("quotesList", JSON.stringify(quotesList));
 }
 
+export function clearAllCached() {
+    saveCachedQuotesList([]);
+    saveCachedQuotesList([]);    
+}
+
 
 export function getTitlesList() { //TODO: This seems bad?
     return bookTitles;
