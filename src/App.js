@@ -8,6 +8,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import { getQuestionsListFromDrive, getQuestionsFromCachedQuotes } from './api/quizHelper';
 import ProgressCard from './Components/ProgressCard';
 import { LocalStorage } from './api/LocalStorage';
+import GenericCard from './Components/GenericCard';
+import GoogleAuthButton from './Components/GoogleAuthButton';
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -71,7 +73,7 @@ function App() {
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
 
-  const [ isLoggedIn, setIsLoggedIn ] = useState(true);
+  const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
   const classes = useStyles();
 
@@ -94,6 +96,11 @@ function App() {
     questionsList = []; 
     resetQuizState();
     setQuizShouldStart(false);
+    setIsLoggedIn(false);
+  }
+
+  const showImportScreen = () => {
+    clearQuizScreen();
   }
 
 
@@ -138,20 +145,21 @@ function App() {
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
     <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
       <Grid item>
-        <AppHeader authResponseHandler={authResponseHandler} clearQuizScreen={clearQuizScreen}/>
+        <AppHeader authResponseHandler={authResponseHandler} 
+                    clearQuizScreen={clearQuizScreen} 
+                    showImportScreen={showImportScreen}/>
       </Grid>
       
       <Grid item container style={{paddingTop:"5%"}}>
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {questionsList === undefined ?
-            <GameCard
-            highlightMessage={"Please sign in to your Google account."}
-            highlightColor={"yellow"}
-            shouldShowAnswer={shouldShowAnswer}
-            incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={[]}
-          />
+          {questionsList === undefined || (!isLoggedIn && questionsList.length === 0) ?
+            <GenericCard centered>
+              <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
+              <GoogleAuthButton authResponseHandler={authResponseHandler} />
+            </GenericCard>
+          
+            
 
           : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ? 
             <GameCard 

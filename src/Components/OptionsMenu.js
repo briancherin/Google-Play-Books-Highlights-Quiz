@@ -15,6 +15,11 @@ const OptionsMenu = (props) => {
         props.clearQuizScreen();
     }
 
+    const showImportScreen = () => {
+        props.showImportScreen();
+        handleClose();
+    }
+
     const handleClick = (event) => {
         setAnchorEl(event.currentTarget);
     }
@@ -46,6 +51,10 @@ const OptionsMenu = (props) => {
             >
                 <MenuItem onClick={() => clearCachedHighlights()}>
                     Clear cached highlights
+                </MenuItem>
+
+                <MenuItem onClick={() => showImportScreen()}>
+                    Re-import from Google Drive
                 </MenuItem>
             </Menu>
         </div>

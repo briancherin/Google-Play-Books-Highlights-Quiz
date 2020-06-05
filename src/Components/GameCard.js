@@ -10,6 +10,7 @@ import NoteIcon from '@material-ui/icons/Note';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
 import StarIcon from '@material-ui/icons/Star';
 import BookLink from './BookLink';
+import GenericCard from './GenericCard';
 
 
 const useStyles = makeStyles({
@@ -66,8 +67,7 @@ export default function GameCard(props) {
 
 
     return(
-        <Card className={classes.mainCard} style={{height:"100%", display:"inline-block"}}>
-            <CardContent>
+        <GenericCard>
 
                 <Grid container direction="column" >
 
@@ -186,7 +186,6 @@ export default function GameCard(props) {
 
               
                 
-            </CardContent>
-        </Card>
+        </GenericCard>
     );
 }
