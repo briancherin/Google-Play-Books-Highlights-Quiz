@@ -2,7 +2,6 @@ import React from 'react';
 import { AppBar, Toolbar, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import LocalLibraryIcon from '@material-ui/icons/LocalLibrary';
-import GoogleAuthButton from './GoogleAuthButton';
 import OptionsMenu from './OptionsMenu';
 
 const useStyles = makeStyles({

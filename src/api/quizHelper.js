@@ -1,4 +1,5 @@
-import { initializeDriveApi, getQuotesList, getTitlesList, getCachedQuotesList, getCachedTitlesList } from "./gdriveNotesHelper";
+import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
+import { QuizLocalStorage } from "./QuizLocalStorage";
 
 export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, callbackUpdateProgress) {
     initializeDriveApi();
@@ -10,11 +11,8 @@ export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, c
 }
 
 export function getQuestionsFromCachedQuotes(maxQuestions) {
-    const bookQuotesList = getCachedQuotesList();
-    const bookTitles = getCachedTitlesList();
-
-    console.log("bookQuotesList: ")
-    console.log(bookQuotesList);
+    const bookQuotesList = QuizLocalStorage.getCachedQuotesList();
+    const bookTitles = QuizLocalStorage.getCachedTitlesList();
 
     if (bookQuotesList !== undefined && bookTitles !== undefined) {
         return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);

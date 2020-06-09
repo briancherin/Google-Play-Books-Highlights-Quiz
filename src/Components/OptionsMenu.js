@@ -1,8 +1,7 @@
 import React from 'react';
 import { IconButton, Menu, MenuItem } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-
-import { clearAllCached } from '../api/gdriveNotesHelper';
+import { QuizLocalStorage } from '../api/QuizLocalStorage';
 
 const OptionsMenu = (props) => {
 
@@ -10,7 +9,7 @@ const OptionsMenu = (props) => {
     const open = Boolean(anchorEl);
 
     const clearCachedHighlights = () => {
-        clearAllCached();
+        QuizLocalStorage.clearAllCached();
         handleClose();
         props.clearQuizScreen();
     }

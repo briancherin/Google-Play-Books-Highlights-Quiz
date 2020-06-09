@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import GameCard from './Components/GameCard';
 import AppHeader from './Components/AppHeader';
 import { Grid, Typography } from '@material-ui/core';
-import LinearProgress from '@material-ui/core/LinearProgress';
 import { makeStyles } from '@material-ui/core/styles';
 import { getQuestionsListFromDrive, getQuestionsFromCachedQuotes } from './api/quizHelper';
 import ProgressCard from './Components/ProgressCard';
-import { LocalStorage } from './api/LocalStorage';
 import GenericCard from './Components/GenericCard';
 import GoogleAuthButton from './Components/GoogleAuthButton';
 

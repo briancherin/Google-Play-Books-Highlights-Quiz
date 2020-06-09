@@ -1,7 +1,6 @@
 import cheerio from 'cheerio';
-import { authenticateApi, getFilesInFolder, getFileHtml, loadApi, getAllFilesHtml } from './gdrive';
-
-import { LocalStorage } from './LocalStorage';
+import { authenticateApi, getFilesInFolder, loadApi, getAllFilesHtml } from './gdrive';
+import { QuizLocalStorage } from './QuizLocalStorage';
 
 var bookTitles = [];
 
@@ -10,37 +9,9 @@ export function initializeDriveApi() {
 }
 
 
-
-export function getCachedQuotesList() {
-    if (LocalStorage.supports_html5_storage()) {
-        return JSON.parse(LocalStorage.get("quotesList"));
-    } else {
-        return undefined;
-    }
-}
-
-export function getCachedTitlesList() {
-    return JSON.parse(LocalStorage.get("titlesList"));
-}
-
-function saveCachedTitlesList(titlesList) {
-    LocalStorage.put("titlesList", JSON.stringify(titlesList));
-}
-
-function saveCachedQuotesList(quotesList) {
-    LocalStorage.put("quotesList", JSON.stringify(quotesList));
-}
-
-export function clearAllCached() {
-    saveCachedQuotesList([]);
-    saveCachedQuotesList([]);    
-}
-
-
 export function getTitlesList() { //TODO: This seems bad?
     return bookTitles;
 }
-
 
 /* Get the quotes from Google Drive */
 export async function getQuotesList(authObject, callbackUpdateProgress) {
@@ -85,8 +56,8 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
             }    
         }
 
-        saveCachedQuotesList(quotesList); // Cache the quotesList for next time
-        saveCachedTitlesList(bookTitles);
+        QuizLocalStorage.saveCachedQuotesList(quotesList); // Cache the quotesList for next time
+        QuizLocalStorage.saveCachedTitlesList(bookTitles);
 
         resolve(quotesList);
     });
