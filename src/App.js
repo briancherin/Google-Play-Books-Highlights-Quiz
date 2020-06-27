@@ -8,6 +8,8 @@ import { getQuestionsListFromDrive, getQuestionsFromCachedQuotes } from './api/q
 import ProgressCard from './Components/ProgressCard';
 import GenericCard from './Components/GenericCard';
 import GoogleAuthButton from './Components/GoogleAuthButton';
+import CustomDrawer from './Components/CustomDrawer';
+import FavoritesList from "./Components/Favorites/FavoritesList";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -17,7 +19,7 @@ const useStyles = makeStyles({
   }
 });
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 if (DEBUG_MODE) {
   var questionsList = [{
@@ -51,15 +53,14 @@ if (DEBUG_MODE) {
   isCorrectAnswerChoice: false}
 
 ],
-  highlightText: "Uno nunca tiene suficiente calcetines"
+  highlightText: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
 },
 ];  
 }
 if (!DEBUG_MODE) {
-  var questionsList = [];
+  var questionsList = getQuestionsFromCachedQuotes(50);
 }
 
-questionsList = getQuestionsFromCachedQuotes(50);
 console.log(questionsList)
 
 function App() {
@@ -149,6 +150,11 @@ function App() {
       </Grid>
       
       <Grid item container style={{paddingTop:"5%"}}>
+
+        <CustomDrawer openButtonText={"Favorites"}>
+          <FavoritesList  favorites={[{highlightText: "lalal", bookTitle:"Book by Author"}, {highlightText: "sdfsfd", bookTitle: "Book Part 2 by Author"}]}/>
+        </CustomDrawer>
+
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
           {questionsList === undefined || (!isLoggedIn && questionsList.length === 0) ?

@@ -11,6 +11,7 @@ import StarBorderIcon from '@material-ui/icons/StarBorder';
 import StarIcon from '@material-ui/icons/Star';
 import BookLink from './BookLink';
 import GenericCard from './GenericCard';
+import HighlightBox from "./HighlightBox";
 
 
 const useStyles = makeStyles({
@@ -38,32 +39,28 @@ const useStyles = makeStyles({
 
 });
 
-const SHOW_DATE = "Show date";
 
 export default function GameCard(props) {
 
     const classes = useStyles();
 
-    const scrollRef = useRef(null);
 
     const { shouldShowAnswer, incorrectAnswersSelected } = props;
 
-    const [ dateText, setDateText ] = useState(SHOW_DATE)
+    const [ showDate, setShowDate ] = useState(false);
 
-    const [ isFavorited, setIsFavorited ] = useState(false);
 
     const resetDateText = () => {
-        setDateText(SHOW_DATE)
+        setShowDate(false)
     }
+
+    const scrollRef = useRef(null);
 
     const resetScrollbar = () => {
         scrollRef.current.scrollTop = 0;
     }
 
-    const handleFavoriteClick = () => {
-        setIsFavorited(!isFavorited);
-        //TODO: Actually save or unsave
-    }
+
 
 
     return(
@@ -73,39 +70,16 @@ export default function GameCard(props) {
 
                     {/* Question area */}
                     <Grid item>
-                        <div >
-                        <Typography ref={scrollRef} variant="h5" style={{padding:"15px", height:"25vh", overflow:"auto", backgroundColor: props.highlightColor}}>
-                            {props.highlightMessage}
-                            <br/>
-                            <Grid container style={{paddingTop:"10px"}}>
-                                <Grid item style={{flex: 1}}>
-                                    <Typography style={{fontSize: 14, fontStyle: "italic", cursor: "pointer"}} onClick={() => setDateText(props.highlightDate)}>{dateText}</Typography> 
-                                </Grid>
-                                <Grid item>
-                                    <Tooltip title={isFavorited ? "Remove from favorites" : "Save in favorites"}>
-                                       <IconButton disableRipple onClick={()=>handleFavoriteClick()}>
-                                        { isFavorited 
-                                        ? <StarIcon />
-                                        : <StarBorderIcon />
-                                        }
-                                        
-                                    </IconButton> 
-                                    </Tooltip>
-                                    
-                                    {props.highlightNotes !== "" && props.highlightNotes !== undefined ?
-                                        <Tooltip  interactive title={props.highlightNotes}>
-                                            <IconButton disableRipple >
-                                                <NoteIcon style={{fill:"#42a5f5"}}/>
-                                            </IconButton>
-                                        </Tooltip>
-                                    : null
-                                    }
-                                    
-                                </Grid>
-                            </Grid>
-
-                        </Typography>
-                        </div>
+                        <HighlightBox
+                            scrollRef={scrollRef}
+                            highlightColor={props.highlightColor}
+                            highlightMessage={props.highlightMessage}
+                            highlightNotes={props.highlightNotes}
+                            bookLink={props.bookLink}
+                            highlightDate={props.highlightDate}
+                            showDate={showDate}
+                            toggleDate={() => setShowDate(!showDate)}
+                        />
                     </Grid>
 
                     {/* Answer choices area */}
