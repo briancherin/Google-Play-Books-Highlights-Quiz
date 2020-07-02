@@ -8,13 +8,8 @@ const OptionsMenu = (props) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
 
-    const clearCachedHighlights = () => {
-        QuizLocalStorage.clearAllCached();
-        handleClose();
-        props.clearQuizScreen();
-    }
-
     const showImportScreen = () => {
+        QuizLocalStorage.clearAllCached();  // Clear cached highlights
         props.showImportScreen();
         handleClose();
     }
@@ -48,9 +43,6 @@ const OptionsMenu = (props) => {
                 anchorOrigin={{vertical: "bottom", horizontal: "center"}}
                 transformOrigin={{vertical: "top", horizontal: "center"}}
             >
-                <MenuItem onClick={() => clearCachedHighlights()}>
-                    Clear cached highlights
-                </MenuItem>
 
                 <MenuItem onClick={() => showImportScreen()}>
                     Re-import from Google Drive

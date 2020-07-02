@@ -10,6 +10,7 @@ import GenericCard from './Components/GenericCard';
 import GoogleAuthButton from './Components/GoogleAuthButton';
 import CustomDrawer from './Components/CustomDrawer';
 import FavoritesList from "./Components/Favorites/FavoritesList";
+import { FavoritesLocalStorage } from "./api/FavoritesLocalStorage";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -19,7 +20,7 @@ const useStyles = makeStyles({
   }
 });
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 if (DEBUG_MODE) {
   var questionsList = [{
@@ -74,8 +75,9 @@ function App() {
 
   const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
-  const classes = useStyles();
+  const [ favoritesList, setFavoritesList ] = useState(FavoritesLocalStorage.getFavoritesList());
 
+  const classes = useStyles();
 
 
   const handleAnswerSelection = (selectedTitle) => {
@@ -139,20 +141,23 @@ function App() {
     }
   }
 
+  const updateFavorites = (favoritesList) => {
+    setFavoritesList(favoritesList);
+  }
+
 
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
     <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
       <Grid item>
         <AppHeader authResponseHandler={authResponseHandler} 
-                    clearQuizScreen={clearQuizScreen} 
                     showImportScreen={showImportScreen}/>
       </Grid>
       
       <Grid item container style={{paddingTop:"5%"}}>
 
         <CustomDrawer openButtonText={"Favorites"}>
-          <FavoritesList  favorites={[{highlightText: "lalal", bookTitle:"Book by Author"}, {highlightText: "sdfsfd", bookTitle: "Book Part 2 by Author"}]}/>
+          <FavoritesList favorites={favoritesList} updateFavorites={updateFavorites}/>
         </CustomDrawer>
 
         <Grid item xs={false} sm={2} lg={4}/>
@@ -172,11 +177,14 @@ function App() {
             highlightNotes={questionsList[currQuestionIndex].highlightNotes}
             highlightDate={questionsList[currQuestionIndex].highlightDate}
             bookLink={questionsList[currQuestionIndex].bookLink}
+            quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
             shouldShowAnswer={shouldShowAnswer}
             handleAnswerSelection={handleAnswerSelection}
             handleNextQuestion={showNextQuestion}
             incorrectAnswersSelected={incorrectAnswersSelected}
             possibleTitles={questionsList[currQuestionIndex].titles}
+            isFavorited={favoritesList.filter((obj) => obj.highlightMessage === questionsList[currQuestionIndex].highlightText).length > 0} //TODO: Do this better (compare by object. move to its own function)
+            updateFavorites={updateFavorites}
           />
           : loadingProgress !== -1 ?
               <ProgressCard progress={loadingProgress}/>

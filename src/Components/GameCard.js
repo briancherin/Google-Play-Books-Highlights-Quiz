@@ -6,9 +6,6 @@ import classNames from 'classnames';
 import Typography from '@material-ui/core/Typography';
 import FiberManualRecordOutlinedIcon from '@material-ui/icons/FiberManualRecordOutlined';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import NoteIcon from '@material-ui/icons/Note';
-import StarBorderIcon from '@material-ui/icons/StarBorder';
-import StarIcon from '@material-ui/icons/Star';
 import BookLink from './BookLink';
 import GenericCard from './GenericCard';
 import HighlightBox from "./HighlightBox";
@@ -46,9 +43,7 @@ export default function GameCard(props) {
 
 
     const { shouldShowAnswer, incorrectAnswersSelected } = props;
-
     const [ showDate, setShowDate ] = useState(false);
-
 
     const resetDateText = () => {
         setShowDate(false)
@@ -60,9 +55,6 @@ export default function GameCard(props) {
         scrollRef.current.scrollTop = 0;
     }
 
-
-
-
     return(
         <GenericCard>
 
@@ -71,6 +63,7 @@ export default function GameCard(props) {
                     {/* Question area */}
                     <Grid item>
                         <HighlightBox
+                            containerHeight={"25vh"}
                             scrollRef={scrollRef}
                             highlightColor={props.highlightColor}
                             highlightMessage={props.highlightMessage}
@@ -78,7 +71,9 @@ export default function GameCard(props) {
                             bookLink={props.bookLink}
                             highlightDate={props.highlightDate}
                             showDate={showDate}
+                            isFavorited={props.isFavorited}
                             toggleDate={() => setShowDate(!showDate)}
+                            updateFavorites={props.updateFavorites}
                         />
                     </Grid>
 

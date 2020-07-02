@@ -21,7 +21,7 @@ const AppHeader = (props) => {
         <AppBar position="static" elevation={0}>
             <Toolbar className={classes.toolbar}>
                 <Typography variant="h6" className={classes.title}>Play Books Notes Quiz</Typography>
-                <OptionsMenu clearQuizScreen={props.clearQuizScreen} showImportScreen={props.showImportScreen}/>
+                <OptionsMenu showImportScreen={props.showImportScreen}/>
                 <LocalLibraryIcon />
             </Toolbar>
         </AppBar>
