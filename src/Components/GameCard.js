@@ -63,15 +63,10 @@ export default function GameCard(props) {
                     {/* Question area */}
                     <Grid item>
                         <HighlightBox
+                            highlightedQuote={props.highlightedQuote}
                             containerHeight={"25vh"}
                             scrollRef={scrollRef}
-                            highlightColor={props.highlightColor}
-                            highlightMessage={props.highlightMessage}
-                            highlightNotes={props.highlightNotes}
-                            bookLink={props.bookLink}
-                            highlightDate={props.highlightDate}
                             showDate={showDate}
-                            isFavorited={props.isFavorited}
                             toggleDate={() => setShowDate(!showDate)}
                             updateFavorites={props.updateFavorites}
                         />

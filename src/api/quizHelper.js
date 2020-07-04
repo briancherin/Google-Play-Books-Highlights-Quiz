@@ -30,7 +30,7 @@ function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {
         /* Select a random quote */
         const randomQuoteObject = selectRandomQuote(bookQuotesList);
 
-        const { bookTitle, quoteText, highlightColor, highlightNotes, highlightDate, bookLink } = randomQuoteObject;
+        const { bookTitle, quoteText, highlightColor, highlightNotes, dateHighlighted, bookLink } = randomQuoteObject;
         
         /* Generate the other answer choices */
         let answerChoices = generateAnswerChoices(bookTitle, bookTitles);
@@ -38,11 +38,7 @@ function generateQuestionsList(bookQuotesList, maxQuestions, bookTitles) {
         /* Add this question to the overall list */
         questionsList.push({
             titles: answerChoices,
-            highlightText: quoteText,
-            highlightColor: highlightColor,
-            highlightNotes: highlightNotes,
-            highlightDate: highlightDate,
-            bookLink: bookLink,
+            highlightedQuote: randomQuoteObject,
             correctAnswerTitle: bookTitle
         });
 

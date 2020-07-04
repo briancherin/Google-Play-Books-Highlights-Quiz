@@ -1,4 +1,5 @@
 import { LocalStorage } from "./LocalStorage";
+import { HighlightedQuote } from "../models/HighlightedQuote";
 
 const KEY_FAVORITES_LIST = "favoritesList";
 
@@ -23,7 +24,7 @@ export class FavoritesLocalStorage extends LocalStorage {
     static quoteIsFavorited(quoteText) {
         const list = this.getFavoritesList();
         for (let i = 0; i < list.length; i++) {
-            if (list[i].highlightMessage === quoteText) return true;    //TODO: Replace with Quote object type (search for entire obj)
+            if (list[i].quoteText === quoteText) return true;    //TODO: Replace with Quote object type (search for entire obj)
         }
         return false;
     }
@@ -33,7 +34,7 @@ export class FavoritesLocalStorage extends LocalStorage {
         const newList = this.getFavoritesList()
             .filter((obj) => {
                 // return obj !== favoriteObjToDelete;
-                return obj.highlightMessage !== favoriteObjToDelete.highlightMessage; // TODO: Replace with Quote object type (search for entire obj)
+                return obj.quoteText !== favoriteObjToDelete.quoteText; // TODO: Replace with Quote object type (search for entire obj)
             });
         this.saveFavoritesList(newList);
     }

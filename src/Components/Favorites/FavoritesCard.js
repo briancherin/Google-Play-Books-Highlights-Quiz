@@ -7,9 +7,7 @@ const FavoritesCard = (props) => {
 
     return (
         <GenericCard>
-            {/*<Typography>{props.quoteText}</Typography>*/}
-            {/*<Typography>{props.bookTitle}</Typography>*/}
-            <HighlightBox highlightMessage={props.highlightMessage} updateFavorites={props.updateFavorites} isFavorited={true}/>
+            <HighlightBox highlightedQuote={props.highlightedQuote} updateFavorites={props.updateFavorites}/>
         </GenericCard>
     );
 }

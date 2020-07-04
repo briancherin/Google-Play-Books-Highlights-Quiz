@@ -6,45 +6,38 @@ import StarIcon from "@material-ui/icons/Star";
 import StarBorderIcon from "@material-ui/icons/StarBorder";
 import NoteIcon from "@material-ui/icons/Note";
 import { FavoritesLocalStorage } from "../api/FavoritesLocalStorage";
+import { HighlightedQuote } from "../models/HighlightedQuote";
 
 
 
 const LABEL_SHOW_DATE = "Show date";
 
 const HighlightBox = ({
+  highlightedQuote,
   containerHeight,
   scrollRef,
-  highlightColor,
-  highlightMessage,
-  highlightNotes,
-  bookLink,
-  highlightDate,
   showDate,
   toggleDate,
-  isFavorited,
   updateFavorites,
 }) => {
-  //const [isFavorited, setIsFavorited] = useState(quoteIsFavorited);
 
+    console.log("In Hihglightbox. highlightedQuote:")
+    console.log(highlightedQuote)
 
-  const bookObject = {
-    highlightMessage: highlightMessage,
-    highlightColor: highlightColor,
-    highlightNotes: highlightNotes,
-    bookLink: bookLink,
-    highlightDate: highlightDate,
-  };
+  const { quoteText, highlightColor, highlightNotes, dateHighlighted } = highlightedQuote;
+
+    const quoteIsFavorited = FavoritesLocalStorage.quoteIsFavorited(quoteText); // TODO: change to other param?
 
   const handleFavoriteClick = () => {
-    const newIsFavorited = !isFavorited;
-    // setIsFavorited(newIsFavorited);
+    const newIsFavorited = !quoteIsFavorited;
 
     if (newIsFavorited) {
       console.log("Will push to favorites");
-      FavoritesLocalStorage.pushToFavoritesList(bookObject);
+      highlightedQuote.quoteIsFavorited = true;
+      FavoritesLocalStorage.pushToFavoritesList(highlightedQuote);
     } else {
       console.log("Will remove from favorites");
-      FavoritesLocalStorage.removeFromFavoritesList(bookObject);
+      FavoritesLocalStorage.removeFromFavoritesList(highlightedQuote);
     }
 
     updateFavorites(FavoritesLocalStorage.getFavoritesList()); // Propagate the changes to the favorites UI
@@ -63,7 +56,7 @@ const HighlightBox = ({
         }}
       >
         {/* Highlight content */}
-        {highlightMessage}
+        {quoteText}
         <br />
         <Grid container style={{ paddingTop: "10px" }}>
           {/* Highlight date */}
@@ -74,18 +67,18 @@ const HighlightBox = ({
                 if (toggleDate) toggleDate();
               }}
             >
-              {showDate ? highlightDate : LABEL_SHOW_DATE}
+              {showDate ? dateHighlighted : LABEL_SHOW_DATE}
             </Typography>
           </Grid>
           {/* Favorites button */}
           <Grid item>
             <Tooltip
               title={
-                isFavorited ? "Remove from favorites" : "Save in favorites"
+                  quoteIsFavorited ? "Remove from favorites" : "Save in favorites"
               }
             >
               <IconButton disableRipple onClick={() => handleFavoriteClick()}>
-                {isFavorited ? <StarIcon /> : <StarBorderIcon />}
+                {quoteIsFavorited ? <StarIcon /> : <StarBorderIcon />}
               </IconButton>
             </Tooltip>
             {/* Highlight notes button */}
@@ -106,6 +99,7 @@ const HighlightBox = ({
 HighlightBox.propTypes = {
     containerHeight: PropTypes.string,   // e.g. "25vh"
     updateFavorites: PropTypes.func,
+    // highlightedQuote: PropTypes.instanceOf(HighlightedQuote),
 }
 
 export default HighlightBox;

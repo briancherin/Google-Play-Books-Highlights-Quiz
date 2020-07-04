@@ -11,21 +11,28 @@ const useStyles = makeStyles({
     }
 });
 
-const FavoritesList = (props) => {
+const FavoritesList = ({favorites, updateFavorites}) => {
     const classes = useStyles();
+
+    console.log("In favoritesList. favorites:")
+    console.log(favorites)
 
     return (
       <div>
         <List className={classes.list}>
-            {props.favorites.map((favorite, index) => (
-                <ListItem key={index}>
-                    <FavoritesCard
-                        highlightMessage={favorite.highlightMessage}
-                        bookTitle={favorite.bookTitle}
-                        updateFavorites={props.updateFavorites}
-                    />
-                </ListItem>
-            ))}
+            {
+                favorites.length === 0
+                    ? <ListItem>You haven't favorited anything yet!</ListItem>
+                    : favorites.map((favorite, index) => (
+                            <ListItem key={index}>
+                                <FavoritesCard
+                                    highlightedQuote={favorite}
+                                    updateFavorites={updateFavorites}
+                                />
+                            </ListItem>
+                        ))
+            }
+
         </List>
       </div>
     );

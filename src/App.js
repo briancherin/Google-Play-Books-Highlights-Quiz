@@ -11,6 +11,7 @@ import GoogleAuthButton from './Components/GoogleAuthButton';
 import CustomDrawer from './Components/CustomDrawer';
 import FavoritesList from "./Components/Favorites/FavoritesList";
 import { FavoritesLocalStorage } from "./api/FavoritesLocalStorage";
+import { HighlightedQuote } from "./models/HighlightedQuote";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -36,10 +37,10 @@ if (DEBUG_MODE) {
     isCorrectAnswerChoice: false}
   ],
   correctAnswerTitle: "Harry Potter and the Sorcerer's Stone",
-  highlightText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
+  quoteText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
   highlightColor: "yellow",
   highlightNotes: "lalalala",
-  highlightDate: "January 1, 2022",
+  dateHighlighted: "January 1, 2022",
   bookLink: "book.com/page",
   }
   ,
@@ -54,7 +55,7 @@ if (DEBUG_MODE) {
   isCorrectAnswerChoice: false}
 
 ],
-  highlightText: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
+  quoteText: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
 },
 ];  
 }
@@ -76,6 +77,9 @@ function App() {
   const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
   const [ favoritesList, setFavoritesList ] = useState(FavoritesLocalStorage.getFavoritesList());
+
+  console.log("in App: favoritesList:")
+  console.log(favoritesList)
 
   const classes = useStyles();
 
@@ -145,6 +149,28 @@ function App() {
     setFavoritesList(favoritesList);
   }
 
+  const getCurrQuoteObject = () => {
+    return questionsList[currQuestionIndex].highlightedQuote;
+
+    /*if (currQuestionIndex > 0) {
+      let currQuestion = questionsList[currQuestionIndex];
+
+      if (currQuestion !== undefined) {
+        return new HighlightedQuote(
+            currQuestion.quoteText,
+            currQuestion.highlightColor,
+            currQuestion.highlightNotes,
+            currQuestion.dateHighlighted,
+            currQuestion.bookLink,
+            currQuestion.correctAnswerTitle,
+            currQuestion.quoteIsFavorited,
+        )
+      }
+    }*/
+  }
+
+
+
 
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
@@ -171,11 +197,12 @@ function App() {
             
 
           : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ? 
-            <GameCard 
-            highlightMessage={questionsList[currQuestionIndex].highlightText}
+            <GameCard
+            highlightedQuote={getCurrQuoteObject()}
+            quoteText={questionsList[currQuestionIndex].quoteText}
             highlightColor={questionsList[currQuestionIndex].highlightColor}
             highlightNotes={questionsList[currQuestionIndex].highlightNotes}
-            highlightDate={questionsList[currQuestionIndex].highlightDate}
+            dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
             bookLink={questionsList[currQuestionIndex].bookLink}
             quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
             shouldShowAnswer={shouldShowAnswer}
@@ -183,14 +210,14 @@ function App() {
             handleNextQuestion={showNextQuestion}
             incorrectAnswersSelected={incorrectAnswersSelected}
             possibleTitles={questionsList[currQuestionIndex].titles}
-            isFavorited={favoritesList.filter((obj) => obj.highlightMessage === questionsList[currQuestionIndex].highlightText).length > 0} //TODO: Do this better (compare by object. move to its own function)
+            isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
             updateFavorites={updateFavorites}
           />
           : loadingProgress !== -1 ?
               <ProgressCard progress={loadingProgress}/>
           : !isLoggedIn ?
             <GameCard
-              highlightMessage={"Please sign in to your Google account."}
+              quoteText={"Please sign in to your Google account."}
               highlightColor={"yellow"}
               shouldShowAnswer={shouldShowAnswer}
               incorrectAnswersSelected={incorrectAnswersSelected}
@@ -198,7 +225,7 @@ function App() {
             />
           : loadingProgress === 100 && questionsList.length === 0 ?
           <GameCard
-            highlightMessage={"There are no Google Play Books notes in your account."}
+            quoteText={"There are no Google Play Books notes in your account."}
             highlightColor={"yellow"}
             shouldShowAnswer={shouldShowAnswer}
             incorrectAnswersSelected={incorrectAnswersSelected}

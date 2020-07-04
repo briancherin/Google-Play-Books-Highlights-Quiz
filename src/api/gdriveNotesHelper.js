@@ -1,6 +1,8 @@
 import cheerio from 'cheerio';
 import { authenticateApi, getFilesInFolder, loadApi, getAllFilesHtml } from './gdrive';
 import { QuizLocalStorage } from './QuizLocalStorage';
+import { HighlightedQuote } from "../models/HighlightedQuote";
+import { FavoritesLocalStorage } from "./FavoritesLocalStorage";
 
 var bookTitles = [];
 
@@ -20,7 +22,7 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
         
         await authenticateApi(authObject);
 
-        var quotesList = [];
+        let quotesList = [];
 
         let bookFiles = await getFilesInFolder("Play Books Notes");
 
@@ -31,16 +33,12 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
         const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
             callbackUpdateProgress(progress); /* Update the progress bar */
         });
-        
-
 
         for (let i = 0; i < htmlList.length; i++) {
             const bookHtml = htmlList[i].html;
 
             /* Parse the html for this file and extract the list of quotes */
             const bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
-
-        
 
             if (bookQuotes.length > 0) {
 
@@ -79,18 +77,19 @@ export function getQuotesListFromHTML(html) {
             const text = $(element).text();
             const highlightColor = getHighlightColor($(element).attr("style"))
             const highlightNotes = getHighlightNotes($(element).parent()[0].parent)
-            const highlightDate = getHighlightDate($(element).parent()[0].parent)
+            const dateHighlighted = getHighlightDate($(element).parent()[0].parent)
             console.log($(element))
             const bookLink = $(element).parent().parent().parent().parent().parent().find('td[colspan="1"] > p > span > a').attr("href")
             if (text !== "") {
-                quotes.push({
-                    quoteText: text,
-                    highlightColor: highlightColor,
-                    highlightNotes: highlightNotes,
-                    highlightDate: highlightDate,
-                    bookLink: bookLink,
-                    bookTitle: title
-                });
+                quotes.push(new HighlightedQuote(
+                    text,
+                    highlightColor,
+                    highlightNotes,
+                    dateHighlighted,
+                    bookLink,
+                    title,
+                    FavoritesLocalStorage.quoteIsFavorited(text), // TODO: Change to entire quote object (or however quotes should be compared)
+                ));
             }
         });
 
