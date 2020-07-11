@@ -11,6 +11,7 @@ import GoogleAuthButton from './Components/GoogleAuthButton';
 import CustomDrawer from './Components/CustomDrawer';
 import FavoritesList from "./Components/Favorites/FavoritesList";
 import { FavoritesLocalStorage } from "./api/FavoritesLocalStorage";
+import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
 
 const useStyles = makeStyles({
@@ -20,6 +21,9 @@ const useStyles = makeStyles({
     height: "100vh",
   }
 });
+
+const SCREEN_LIST = 0;
+const SCREEN_QUIZ = 1;
 
 const DEBUG_MODE = false;
 
@@ -60,12 +64,14 @@ if (DEBUG_MODE) {
 ];  
 }
 if (!DEBUG_MODE) {
-  var questionsList = getQuestionsFromCachedQuotes(50);
+  var questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
 }
 
 console.log(questionsList)
 
 function App() {
+  const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
+
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const [ quizShouldStart, setQuizShouldStart ] = useState(false);
@@ -170,7 +176,7 @@ function App() {
   }
 
 
-
+  const quotesNotInitialized = questionsList === undefined || (!isLoggedIn && questionsList.length === 0);
 
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
@@ -182,13 +188,18 @@ function App() {
       
       <Grid item container style={{paddingTop:"5%"}}>
 
-        <CustomDrawer openButtonText={"Favorites"}>
-          <FavoritesList favorites={favoritesList} updateFavorites={updateFavorites}/>
-        </CustomDrawer>
+        {/*FAVORTIES DRAWER*/}
+        {
+          quotesNotInitialized
+            ? null
+            : <CustomDrawer openButtonText={<StarIcon/>}>
+                <FavoritesList favorites={favoritesList} updateFavorites={updateFavorites}/>
+              </CustomDrawer>
+        }
 
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {questionsList === undefined || (!isLoggedIn && questionsList.length === 0) ?
+          {quotesNotInitialized ?
             <GenericCard centered>
               <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
               <GoogleAuthButton authResponseHandler={authResponseHandler} />
