@@ -115,7 +115,7 @@ export default function GameCard(props) {
                                     {/* Link to highlight Play Books */}
                                     <Grid item>
                                         {(isCorrectAnswerChoice && shouldShowAnswer) 
-                                            ? <BookLink url={props.bookLink} />
+                                            ? <BookLink url={props.highlightedQuote.bookLink} />
                                             : null
                                             }
                                     </Grid>
