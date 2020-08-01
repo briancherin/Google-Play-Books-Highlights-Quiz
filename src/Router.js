@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import App from "./App";
 import { Typography } from "@material-ui/core";
+import { HighlightsBrowser } from "./screens/HighlightsBrowser/HighlightsBrowser";
 
 
 //https://www.sitepoint.com/react-router-complete-guide/
@@ -12,12 +13,11 @@ const Router = () => {
 
     return (
 
-        userIsLoggedIn
-            ? <App />
-            : <BrowserRouter>
+            <BrowserRouter>
                 <Switch>
-                    <Route exact path="/" component={LoginScreen}/>
+                    <Route exact path="/" component={userIsLoggedIn ? App : LoginScreen}/>
                     <Route exact path="/login" component={LoginScreen} />
+                    <Route exact path="/browse" component={HighlightsBrowser} />
                 </Switch>
             </BrowserRouter>
 
