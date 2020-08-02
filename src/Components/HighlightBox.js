@@ -7,6 +7,7 @@ import StarBorderIcon from "@material-ui/icons/StarBorder";
 import NoteIcon from "@material-ui/icons/Note";
 import { FavoritesLocalStorage } from "../api/FavoritesLocalStorage";
 import { HighlightedQuote } from "../models/HighlightedQuote";
+import BookLink from "./BookLink";
 
 
 
@@ -19,10 +20,8 @@ const HighlightBox = ({
   showDate,
   toggleDate,
   updateFavorites,
+  showBookLink
 }) => {
-
-    console.log("In Hihglightbox. highlightedQuote:")
-    console.log(highlightedQuote)
 
   const { quoteText, highlightColor, highlightNotes, dateHighlighted } = highlightedQuote;
 
@@ -89,6 +88,12 @@ const HighlightBox = ({
                 </IconButton>
               </Tooltip>
             ) : null}
+
+        {/* Book link, if enabled */}
+          { showBookLink
+              ? <BookLink url={highlightedQuote.bookLink}/>
+              : null
+          }
           </Grid>
         </Grid>
       </Typography>

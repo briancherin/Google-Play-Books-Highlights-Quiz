@@ -18,7 +18,6 @@ import TextField from "@material-ui/core/TextField";
 const quotesList = QuizLocalStorage.getCachedQuotesList();
 
 const itemsPerPage = 10;
-const numPages = Math.ceil(quotesList.length / itemsPerPage);
 
 // const paginationArray = new Array(numPages);
 const paginationArray = [1,2,3]
@@ -53,6 +52,7 @@ export const HighlightsBrowser = () => {
         ? quotesList.filter((item) => item.title.toLowerCase().includes(searchText.toLowerCase()))
         : quotesList;
 
+    const numPages = Math.ceil(filteredQuotesList.length / itemsPerPage);
 
     //TODO: add pagination https://codesandbox.io/s/material-demo-g0xo5?file=/demo.js:2077-2087
     return (
@@ -83,7 +83,7 @@ export const HighlightsBrowser = () => {
                                                     const quoteObject = HighlightedQuote.fromJson(quoteJson);
                                                     // return <ListItem key={index2}>{quoteObject.quoteText}</ListItem>
                                                     return <div>
-                                                        <HighlightBox key={index2} style={{margin: 10}} highlightedQuote={quoteObject} showDate/>
+                                                        <HighlightBox key={index2} style={{margin: 10}} highlightedQuote={quoteObject} showDate showBookLink/>
                                                         <Divider style={{backgroundColor: "white"}}/>
                                                     </div>
                                                 })
