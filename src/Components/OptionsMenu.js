@@ -2,6 +2,7 @@ import React from 'react';
 import { IconButton, Menu, MenuItem } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import { QuizLocalStorage } from '../api/QuizLocalStorage';
+import Firebase from "../api/firebase/Firebase";
 
 const OptionsMenu = (props) => {
 
@@ -46,6 +47,9 @@ const OptionsMenu = (props) => {
 
                 <MenuItem onClick={() => showImportScreen()}>
                     Re-import from Google Drive
+                </MenuItem>
+                <MenuItem onClick={() => Firebase.signOut()}>
+                    Sign out
                 </MenuItem>
             </Menu>
         </div>
