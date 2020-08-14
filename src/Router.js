@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import App from "./App";
 import { HighlightsBrowser } from "./screens/HighlightsBrowser/HighlightsBrowser";
