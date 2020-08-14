@@ -6,8 +6,24 @@ import { firebase_config } from '../credentials.json';
 class Firebase {
 
     static initialized = false;
+
+
+    /**
+     * @type {firebase.auth.Auth}
+     */
     static auth;
+
+    /**
+     * @type {firebase.database.Database}
+     */
+    static database;
+
+
     static googleProvider;
+
+    /**
+     * @type {firebase.User}
+     */
     static user = null;
 
     // TODO: Do this a better way (see https://www.robinwieruch.de/complete-firebase-authentication-react-tutorial)
@@ -15,6 +31,7 @@ class Firebase {
         if (!this.initialized) {
             app.initializeApp(firebase_config);
             this.auth = app.auth();
+            this.database = app.database();
             this.googleProvider = new app.auth.GoogleAuthProvider();
             this.initialized = true;
         }
@@ -34,9 +51,9 @@ class Firebase {
     static async signInWithGoogle() {
         return new Promise(async (resolve, reject) => {
             await this.initialize();
-            this.auth.signInWithPopup(this.googleProvider).then((user) => {
-                this.user = user;
-                resolve(user);
+            this.auth.signInWithPopup(this.googleProvider).then((userResult) => {
+                this.user = userResult.user;
+                resolve(userResult);
             }).catch((e) => {
                 reject(e);
             });
@@ -56,7 +73,9 @@ class Firebase {
     }
 
     static userIsLoggedIn() {
-        return this.user !== null;
+        return this.auth.currentUser !== null;
+
+        //return this.initialized && this.user !== null;
     }
 
     static getAuthObject() {
@@ -71,6 +90,10 @@ class Firebase {
 
     static setAuthListener(listenerFunction) {
         this.auth.onAuthStateChanged(listenerFunction);
+    }
+
+    static getDatabaseObject() {
+        return this.database;
     }
 }
 

@@ -1,5 +1,5 @@
-import { LocalStorage } from "./LocalStorage";
-import { HighlightedQuote } from "../models/HighlightedQuote";
+import { LocalStorage } from "../LocalStorage";
+import { HighlightedQuote } from "../../models/HighlightedQuote";
 
 const KEY_FAVORITES_LIST = "favoritesList";
 

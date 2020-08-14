@@ -5,9 +5,10 @@ import PropTypes from 'prop-types';
 import StarIcon from "@material-ui/icons/Star";
 import StarBorderIcon from "@material-ui/icons/StarBorder";
 import NoteIcon from "@material-ui/icons/Note";
-import { FavoritesLocalStorage } from "../api/FavoritesLocalStorage";
+import { FavoritesLocalStorage } from "../api/favorites/FavoritesLocalStorage";
 import { HighlightedQuote } from "../models/HighlightedQuote";
 import BookLink from "./BookLink";
+import { FavoritesStorage } from "../api/favorites/FavoritesStorage";
 
 
 
@@ -33,10 +34,12 @@ const HighlightBox = ({
     if (newIsFavorited) {
       console.log("Will push to favorites");
       highlightedQuote.quoteIsFavorited = true;
-      FavoritesLocalStorage.pushToFavoritesList(highlightedQuote);
+      // FavoritesLocalStorage.pushToFavoritesList(highlightedQuote);
+        FavoritesStorage.addToFavorites(highlightedQuote);
     } else {
       console.log("Will remove from favorites");
-      FavoritesLocalStorage.removeFromFavoritesList(highlightedQuote);
+      // FavoritesLocalStorage.removeFromFavoritesList(highlightedQuote);
+        FavoritesStorage.removeFromFavorites(highlightedQuote);
     }
 
     updateFavorites(FavoritesLocalStorage.getFavoritesList()); // Propagate the changes to the favorites UI
