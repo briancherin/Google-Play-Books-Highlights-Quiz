@@ -1,6 +1,6 @@
 
 ## Overview
-**This project is a way to encourage a sentimental e-book lover to look back at their highlights and notes, in the format of a quiz.**
+**This ReactJS web app is a way to encourage a sentimental e-book lover to look back at their highlights and notes, in the format of a quiz.**
 
 The quiz presents the user with a book quote that they highlighted, and challenges them to identify which book title it originates from.
 
@@ -13,12 +13,16 @@ Features
 
 ## Demo
 **Quiz:**
-<br/>
+<br/><br/>
 <img src="res/quiz_demo.gif"/>
 
 
+**Importing highlights from Google Drive:**
+<br/><br/>
+<img src="res/import_demo.gif"/>
+
 **Highlights Browser:**
-<br/>
+<br/><br/>
 <img src="res/browse_demo.gif"/>
 
 ## The Inspiration
