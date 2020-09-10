@@ -4,12 +4,12 @@
 
 The quiz presents the user with a book quote that they highlighted, and challenges them to identify which book title it originates from.
 
-Features
-* Easy import of highlights and highlight notes from Google Play Books
-* Displays any notes the user took for that highlight, the matching highlight color, and the date the highlight was made
-* Each quote includes a link to the exact location of the quote in the e-book in Google Play Books
-* Ability to "favorite" a quote to keep track of quotes you want to save and look back at later
-* "Browse" mode that presents all highlights and notes in a clean UI, grouped by book title
+**Features:**
+* Easy import of highlights and notes from Google Play Books. Import is only required the first time the app is loaded.
+* Displays any notes the user took for that highlight, the matching highlight color, and the date the highlight was made.
+* Each quote includes a link to the exact location of the quote in the e-book in Google Play Books.
+* Ability to "favorite" a quote to keep track of quotes you want to save and look back at later.
+* "Browse" mode that presents all highlights and notes in a clean UI, grouped by book title.
 
 ## Demo
 **Quiz:**
