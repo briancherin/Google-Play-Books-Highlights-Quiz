@@ -10,9 +10,10 @@ import GenericCard from './Components/GenericCard';
 import GoogleAuthButton from './Components/GoogleAuthButton';
 import CustomDrawer from './Components/CustomDrawer';
 import FavoritesList from "./Components/Favorites/FavoritesList";
-import { FavoritesLocalStorage } from "./api/FavoritesLocalStorage";
+import { FavoritesLocalStorage } from "./api/favorites/FavoritesLocalStorage";
 import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
+// import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -63,9 +64,15 @@ if (DEBUG_MODE) {
 },
 ];  
 }
+let usingCachedQuotes = false;
 if (!DEBUG_MODE) {
   var questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
+  if (questionsList && questionsList.length > 0) {
+    usingCachedQuotes = true;
+  }
 }
+
+// FirebaseDatabase.initialize();
 
 console.log(questionsList)
 
@@ -118,6 +125,16 @@ function App() {
   /* Respones to Google sign in */
   /* Upon Google sign in, pull the quotes from google drive */
   const authResponseHandler = async (authObject) => {
+
+    console.log("authObject:" + JSON.stringify(authObject));
+/*
+      FirebaseDatabase.authenticate(authObject.tokenObj.id_token, authObject.tokenObj.access_token).then(() => {
+        console.log("Initialized Firebase Database");
+      }).catch((e) => {
+        console.error("Failed to initialize Firebase Database: ")
+        console.error(e)
+      })*/
+
       if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
@@ -126,6 +143,8 @@ function App() {
           console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
           setQuizShouldStart(true);
         }
+
+
       } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
       }
@@ -156,6 +175,7 @@ function App() {
   }
 
   const getCurrQuoteObject = () => {
+    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex].highlightedQuote.bookLink));
     return questionsList[currQuestionIndex].highlightedQuote;
 
     /*if (currQuestionIndex > 0) {
@@ -199,7 +219,7 @@ function App() {
 
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {quotesNotInitialized ?
+          {quotesNotInitialized && loadingProgress === -1 ?
             <GenericCard centered>
               <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
               <GoogleAuthButton authResponseHandler={authResponseHandler} />
@@ -207,7 +227,7 @@ function App() {
           
             
 
-          : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ? 
+          : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ?
             <GameCard
             highlightedQuote={getCurrQuoteObject()}
             quoteText={questionsList[currQuestionIndex].quoteText}
