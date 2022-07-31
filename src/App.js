@@ -70,7 +70,7 @@ if (DEBUG_MODE) {
 let usingCachedQuotes = false;
 if (!DEBUG_MODE) {
   var questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
-  if (questionsList && questionsList.length > 0) {
+  if (questionsList && questionsList?.length > 0) {
     usingCachedQuotes = true;
   }
 }
@@ -82,6 +82,7 @@ console.log(questionsList)
 const App = ({ authObject }) => {
   const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
 
+  const [ importIsLoading, setImportIsLoading ] = useState(false);
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const [ quizShouldStart, setQuizShouldStart ] = useState(false);
@@ -104,17 +105,21 @@ const App = ({ authObject }) => {
 
     console.log("In useEffect. Is Firebase logged in?", Firebase.userIsLoggedIn(), FirebaseAuthHelper.getLoggedInUserId())
 
+
     if (authObject && authObject.tokenObj) {
-      setLoadingProgress(0); //Initiate loading spinner
       setIsLoggedIn(true);
-      if (!DEBUG_MODE) {
-        questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
-        console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
-        setQuizShouldStart(true);
+
+      if (!usingCachedQuotes) {
+        setImportIsLoading(true);
+        setLoadingProgress(0); //Initiate loading spinner
+        if (!DEBUG_MODE) {
+          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
+          console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
+          setImportIsLoading(false);
+        }
       }
 
-
-
+      setQuizShouldStart(true);
 
     } else if (!DEBUG_MODE) {
       setIsLoggedIn(false);
@@ -185,7 +190,7 @@ const App = ({ authObject }) => {
 
     const nextQuestionIndex = currQuestionIndex + 1;
 
-    if (nextQuestionIndex < questionsList.length) {
+    if (nextQuestionIndex < questionsList?.length) {
 
       resetQuizState();
 
@@ -221,7 +226,7 @@ const App = ({ authObject }) => {
   }
 
 
-  const quotesNotInitialized = questionsList === undefined || (!isLoggedIn && questionsList.length === 0);
+  const quotesInitialized = isLoggedIn && questionsList?.length > 0;
 
   // @ts-ignore
   return (
@@ -236,42 +241,43 @@ const App = ({ authObject }) => {
 
         {/*FAVORTIES DRAWER*/}
         {
-          quotesNotInitialized
-            ? null
-            : <CustomDrawer openButtonText={<StarIcon/>}>
+          quotesInitialized
+            ? <CustomDrawer openButtonText={<StarIcon/>}>
                 <FavoritesList favorites={favoritesList} updateFavorites={updateFavorites}/>
               </CustomDrawer>
+            : null
         }
 
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {quotesNotInitialized && loadingProgress === -1 ?
+          {!quotesInitialized && loadingProgress === -1 ?
             <GenericCard centered>
               <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
-              <GoogleAuthButton authResponseHandler={authResponseHandler} />
+              {/*<GoogleAuthButton authResponseHandler={authResponseHandler} />*/}
             </GenericCard>
-          
+
+          : importIsLoading ?
+              <ProgressCard progress={loadingProgress}/>
             
 
-          : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ?
+          : quizShouldStart || (questionsList?.length > 0 && currQuestionIndex >= 0)  ?
             <GameCard
-            highlightedQuote={getCurrQuoteObject()}
-            quoteText={questionsList[currQuestionIndex].quoteText}
-            highlightColor={questionsList[currQuestionIndex].highlightColor}
-            highlightNotes={questionsList[currQuestionIndex].highlightNotes}
-            dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
-            bookLink={questionsList[currQuestionIndex].bookLink}
-            quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
-            shouldShowAnswer={shouldShowAnswer}
-            handleAnswerSelection={handleAnswerSelection}
-            handleNextQuestion={showNextQuestion}
-            incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={questionsList[currQuestionIndex].titles}
-            isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
-            updateFavorites={updateFavorites}
-          />
-          : loadingProgress !== -1 ?
-              <ProgressCard progress={loadingProgress}/>
+              highlightedQuote={getCurrQuoteObject()}
+              quoteText={questionsList[currQuestionIndex].quoteText}
+              highlightColor={questionsList[currQuestionIndex].highlightColor}
+              highlightNotes={questionsList[currQuestionIndex].highlightNotes}
+              dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
+              bookLink={questionsList[currQuestionIndex].bookLink}
+              quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
+              shouldShowAnswer={shouldShowAnswer}
+              handleAnswerSelection={handleAnswerSelection}
+              handleNextQuestion={showNextQuestion}
+              incorrectAnswersSelected={incorrectAnswersSelected}
+              possibleTitles={questionsList[currQuestionIndex].titles}
+              isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
+              updateFavorites={updateFavorites}
+            />
+
           : !isLoggedIn ?
             <GameCard
               quoteText={"Please sign in to your Google account."}
@@ -280,7 +286,7 @@ const App = ({ authObject }) => {
               incorrectAnswersSelected={incorrectAnswersSelected}
               possibleTitles={[]}
             />
-          : loadingProgress === 100 && questionsList.length === 0 ?
+          : loadingProgress === 100 && questionsList?.length === 0 ?
           <GameCard
             quoteText={"There are no Google Play Books notes in your account."}
             highlightColor={"yellow"}
