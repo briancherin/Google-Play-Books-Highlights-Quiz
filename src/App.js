@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import GameCard from './Components/GameCard';
 import AppHeader from './Components/AppHeader';
@@ -13,6 +13,9 @@ import FavoritesList from "./Components/Favorites/FavoritesList";
 import { FavoritesLocalStorage } from "./api/favorites/FavoritesLocalStorage";
 import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
+import Firebase from "./api/firebase/Firebase";
+import { FirebaseAuthHelper } from "./api/firebase/FirebaseAuthHelper";
+
 // import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
 const useStyles = makeStyles({
@@ -76,7 +79,7 @@ if (!DEBUG_MODE) {
 
 console.log(questionsList)
 
-function App() {
+const App = ({ authObject }) => {
   const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
 
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
@@ -95,6 +98,28 @@ function App() {
   console.log(favoritesList)
 
   const classes = useStyles();
+
+
+  useEffect(async () => {
+
+    console.log("In useEffect. Is Firebase logged in?", Firebase.userIsLoggedIn(), FirebaseAuthHelper.getLoggedInUserId())
+
+    if (authObject && authObject.tokenObj) {
+      setLoadingProgress(0); //Initiate loading spinner
+      setIsLoggedIn(true);
+      if (!DEBUG_MODE) {
+        questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
+        console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
+        setQuizShouldStart(true);
+      }
+
+
+
+
+    } else if (!DEBUG_MODE) {
+      setIsLoggedIn(false);
+    }
+  }, [])
 
 
   const handleAnswerSelection = (selectedTitle) => {
@@ -135,7 +160,7 @@ function App() {
         console.error(e)
       })*/
 
-      if (authObject && authObject.tokenObj) {
+     /* if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
         if (!DEBUG_MODE) {
@@ -147,7 +172,7 @@ function App() {
 
       } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
-      }
+      }*/
   }
 
 
@@ -198,6 +223,7 @@ function App() {
 
   const quotesNotInitialized = questionsList === undefined || (!isLoggedIn && questionsList.length === 0);
 
+  // @ts-ignore
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
     <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
