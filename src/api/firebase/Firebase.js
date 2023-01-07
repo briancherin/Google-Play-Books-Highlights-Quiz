@@ -48,6 +48,13 @@ class Firebase {
         return firebase;
     }
 
+    static async authenticateWithTokens(id_token, access_token) {
+        const credential = this.googleProvider.credential(id_token, access_token);
+        const userResult = await this.auth.signInWithCredential(credential);
+        this.user = userResult.user;
+        return userResult;
+    }
+
     static async signInWithGoogle() {
         return new Promise(async (resolve, reject) => {
             await this.initialize();

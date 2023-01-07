@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import GameCard from './Components/GameCard';
 import AppHeader from './Components/AppHeader';
@@ -10,9 +10,13 @@ import GenericCard from './Components/GenericCard';
 import GoogleAuthButton from './Components/GoogleAuthButton';
 import CustomDrawer from './Components/CustomDrawer';
 import FavoritesList from "./Components/Favorites/FavoritesList";
-import { FavoritesLocalStorage } from "./api/FavoritesLocalStorage";
+import { FavoritesLocalStorage } from "./api/favorites/FavoritesLocalStorage";
 import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
+import Firebase from "./api/firebase/Firebase";
+import { FirebaseAuthHelper } from "./api/firebase/FirebaseAuthHelper";
+
+// import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
 const useStyles = makeStyles({
   mainContainer: {
@@ -63,15 +67,22 @@ if (DEBUG_MODE) {
 },
 ];  
 }
+let usingCachedQuotes = false;
 if (!DEBUG_MODE) {
   var questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
+  if (questionsList && questionsList?.length > 0) {
+    usingCachedQuotes = true;
+  }
 }
+
+// FirebaseDatabase.initialize();
 
 console.log(questionsList)
 
-function App() {
+const App = ({ authObject }) => {
   const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
 
+  const [ importIsLoading, setImportIsLoading ] = useState(false);
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
   const [ quizShouldStart, setQuizShouldStart ] = useState(false);
@@ -88,6 +99,32 @@ function App() {
   console.log(favoritesList)
 
   const classes = useStyles();
+
+
+  useEffect(async () => {
+
+    console.log("In useEffect. Is Firebase logged in?", Firebase.userIsLoggedIn(), FirebaseAuthHelper.getLoggedInUserId())
+
+
+    if (authObject && authObject.tokenObj) {
+      setIsLoggedIn(true);
+
+      if (!usingCachedQuotes) {
+        setImportIsLoading(true);
+        setLoadingProgress(0); //Initiate loading spinner
+        if (!DEBUG_MODE) {
+          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
+          console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
+          setImportIsLoading(false);
+        }
+      }
+
+      setQuizShouldStart(true);
+
+    } else if (!DEBUG_MODE) {
+      setIsLoggedIn(false);
+    }
+  }, [])
 
 
   const handleAnswerSelection = (selectedTitle) => {
@@ -118,7 +155,17 @@ function App() {
   /* Respones to Google sign in */
   /* Upon Google sign in, pull the quotes from google drive */
   const authResponseHandler = async (authObject) => {
-      if (authObject && authObject.tokenObj) {
+
+    console.log("authObject:" + JSON.stringify(authObject));
+/*
+      FirebaseDatabase.authenticate(authObject.tokenObj.id_token, authObject.tokenObj.access_token).then(() => {
+        console.log("Initialized Firebase Database");
+      }).catch((e) => {
+        console.error("Failed to initialize Firebase Database: ")
+        console.error(e)
+      })*/
+
+     /* if (authObject && authObject.tokenObj) {
         setLoadingProgress(0); //Initiate loading spinner
         setIsLoggedIn(true);
         if (!DEBUG_MODE) {
@@ -126,9 +173,11 @@ function App() {
           console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
           setQuizShouldStart(true);
         }
+
+
       } else if (!DEBUG_MODE) {
         setIsLoggedIn(false);
-      }
+      }*/
   }
 
 
@@ -141,7 +190,7 @@ function App() {
 
     const nextQuestionIndex = currQuestionIndex + 1;
 
-    if (nextQuestionIndex < questionsList.length) {
+    if (nextQuestionIndex < questionsList?.length) {
 
       resetQuizState();
 
@@ -156,6 +205,7 @@ function App() {
   }
 
   const getCurrQuoteObject = () => {
+    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex].highlightedQuote.bookLink));
     return questionsList[currQuestionIndex].highlightedQuote;
 
     /*if (currQuestionIndex > 0) {
@@ -176,8 +226,9 @@ function App() {
   }
 
 
-  const quotesNotInitialized = questionsList === undefined || (!isLoggedIn && questionsList.length === 0);
+  const quotesInitialized = isLoggedIn && questionsList?.length > 0;
 
+  // @ts-ignore
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
     <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
@@ -190,42 +241,43 @@ function App() {
 
         {/*FAVORTIES DRAWER*/}
         {
-          quotesNotInitialized
-            ? null
-            : <CustomDrawer openButtonText={<StarIcon/>}>
+          quotesInitialized
+            ? <CustomDrawer openButtonText={<StarIcon/>}>
                 <FavoritesList favorites={favoritesList} updateFavorites={updateFavorites}/>
               </CustomDrawer>
+            : null
         }
 
         <Grid item xs={false} sm={2} lg={4}/>
         <Grid item xs={12} sm={8} lg={4}>
-          {quotesNotInitialized ?
+          {!quotesInitialized && loadingProgress === -1 ?
             <GenericCard centered>
               <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
-              <GoogleAuthButton authResponseHandler={authResponseHandler} />
+              {/*<GoogleAuthButton authResponseHandler={authResponseHandler} />*/}
             </GenericCard>
-          
+
+          : importIsLoading ?
+              <ProgressCard progress={loadingProgress}/>
             
 
-          : quizShouldStart || (questionsList.length > 0 && currQuestionIndex >= 0)  ? 
+          : quizShouldStart || (questionsList?.length > 0 && currQuestionIndex >= 0)  ?
             <GameCard
-            highlightedQuote={getCurrQuoteObject()}
-            quoteText={questionsList[currQuestionIndex].quoteText}
-            highlightColor={questionsList[currQuestionIndex].highlightColor}
-            highlightNotes={questionsList[currQuestionIndex].highlightNotes}
-            dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
-            bookLink={questionsList[currQuestionIndex].bookLink}
-            quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
-            shouldShowAnswer={shouldShowAnswer}
-            handleAnswerSelection={handleAnswerSelection}
-            handleNextQuestion={showNextQuestion}
-            incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={questionsList[currQuestionIndex].titles}
-            isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
-            updateFavorites={updateFavorites}
-          />
-          : loadingProgress !== -1 ?
-              <ProgressCard progress={loadingProgress}/>
+              highlightedQuote={getCurrQuoteObject()}
+              quoteText={questionsList[currQuestionIndex].quoteText}
+              highlightColor={questionsList[currQuestionIndex].highlightColor}
+              highlightNotes={questionsList[currQuestionIndex].highlightNotes}
+              dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
+              bookLink={questionsList[currQuestionIndex].bookLink}
+              quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
+              shouldShowAnswer={shouldShowAnswer}
+              handleAnswerSelection={handleAnswerSelection}
+              handleNextQuestion={showNextQuestion}
+              incorrectAnswersSelected={incorrectAnswersSelected}
+              possibleTitles={questionsList[currQuestionIndex].titles}
+              isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
+              updateFavorites={updateFavorites}
+            />
+
           : !isLoggedIn ?
             <GameCard
               quoteText={"Please sign in to your Google account."}
@@ -234,7 +286,7 @@ function App() {
               incorrectAnswersSelected={incorrectAnswersSelected}
               possibleTitles={[]}
             />
-          : loadingProgress === 100 && questionsList.length === 0 ?
+          : loadingProgress === 100 && questionsList?.length === 0 ?
           <GameCard
             quoteText={"There are no Google Play Books notes in your account."}
             highlightColor={"yellow"}
