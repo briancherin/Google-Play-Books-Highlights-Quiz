@@ -8,6 +8,7 @@ import { LoginScreen } from "./screens/LoginScreen/LoginScreen";
 import Firebase from "./api/firebase/Firebase";
 import * as ROUTES from "./routes";
 import {GoogleLoginResponse} from "react-google-login";
+import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
 Firebase.initialize();
 
@@ -24,7 +25,14 @@ const Router = () => {
         const { id_token, access_token } = authResponse?.tokenObj;
 
         if (id_token && access_token) {
-            console.log("Firebase auth result from creds    ", await Firebase.authenticateWithTokens(id_token, access_token));
+            const firebaseUserResult = await Firebase.authenticateWithTokens(id_token, access_token);
+            console.log("Firebase auth result from creds    ", firebaseUserResult);
+
+            const refreshToken = firebaseUserResult.user.refreshToken;
+
+            //Store the access token and refresh token in the database so that
+            //the backend can make Gdrive requests for the user later
+            await FirebaseDatabase.pushToUserRef("tokens", {accessToken: access_token, refreshToken: refreshToken});
 
             if (authResponse) {
                 setUserLoggedIn(true);
