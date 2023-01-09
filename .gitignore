@@ -24,3 +24,8 @@ yarn-error.log*
 
 
 /src/api/credentials.json
+
+# firebase
+**/.firebase
+**/.firebaserc
+package-lock.json
