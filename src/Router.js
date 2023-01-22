@@ -32,7 +32,7 @@ const Router = () => {
 
             //Store the access token and refresh token in the database so that
             //the backend can make Gdrive requests for the user later
-            await FirebaseDatabase.pushToUserRef("tokens", {accessToken: access_token, refreshToken: refreshToken});
+            await FirebaseDatabase.setUserRefChild("tokens", {accessToken: access_token, refreshToken: refreshToken});
 
 
 
