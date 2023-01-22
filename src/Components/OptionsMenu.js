@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconButton, Menu, MenuItem } from '@material-ui/core';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
-import { QuizLocalStorage } from '../api/QuizLocalStorage';
+import { QuizLocalStorage } from '../api/storage/local/QuizLocalStorage';
 import Firebase from "../api/firebase/Firebase";
 
 const OptionsMenu = (props) => {

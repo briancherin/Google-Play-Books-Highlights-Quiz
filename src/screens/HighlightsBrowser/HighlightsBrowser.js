@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QuizLocalStorage } from "../../api/QuizLocalStorage";
+import { QuizLocalStorage } from "../../api/storage/local/QuizLocalStorage";
 import { Collapse, Typography } from "@material-ui/core";
 import List from "@material-ui/core/List";
 import Divider from "@material-ui/core/Divider";

@@ -1,8 +1,8 @@
 import cheerio from 'cheerio';
 import { authenticateApi, getFilesInFolder, loadApi, getAllFilesHtml } from './gdrive';
-import { QuizLocalStorage } from './QuizLocalStorage';
-import { HighlightedQuote } from "../models/HighlightedQuote";
-import { FavoritesLocalStorage } from "./favorites/FavoritesLocalStorage";
+import { QuizLocalStorage } from '../storage/local/QuizLocalStorage';
+import { HighlightedQuote } from "../../models/HighlightedQuote";
+import { FavoritesLocalStorage } from "../favorites/FavoritesLocalStorage";
 
 var bookTitles = [];
 

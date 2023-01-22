@@ -2,9 +2,9 @@ import * as firebase from 'firebase';
 import app from 'firebase/app';
 
 
-import { firebase_config } from './credentials.json';
-import Firebase from "./firebase/Firebase";
-import { FirebaseAuthHelper } from "./firebase/FirebaseAuthHelper";
+import { firebase_config } from '../../credentials.json';
+import Firebase from "../../firebase/Firebase";
+import { FirebaseAuthHelper } from "../../firebase/FirebaseAuthHelper";
 
 export class FirebaseDatabase {
 
