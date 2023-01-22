@@ -3,7 +3,12 @@ import * as firebase from 'firebase';
 
 import { firebase_config } from '../credentials.json';
 
+const USE_FUNCTIONS_EMULATOR = true; // Use emulator for local development
+
+
 class Firebase {
+
+
 
     static initialized = false;
 
@@ -17,6 +22,11 @@ class Firebase {
      * @type {firebase.database.Database}
      */
     static database;
+
+    /**
+     * @type {firebase.functions.Functions}
+     */
+    static functions;
 
 
     static googleProvider;
@@ -32,8 +42,13 @@ class Firebase {
             app.initializeApp(firebase_config);
             this.auth = app.auth();
             this.database = app.database();
+            this.functions = app.functions();
             this.googleProvider = new app.auth.GoogleAuthProvider();
             this.initialized = true;
+
+            if (USE_FUNCTIONS_EMULATOR) {
+                app.functions().useFunctionsEmulator("http://localhost:5001"); // For local testing
+            }
         }
         return app;
     }

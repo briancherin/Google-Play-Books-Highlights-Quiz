@@ -15,6 +15,8 @@ import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
 import Firebase from "./api/firebase/Firebase";
 import { FirebaseAuthHelper } from "./api/firebase/FirebaseAuthHelper";
+import Button from "@material-ui/core/Button";
+import { callUpdateUserHighlights } from "./api/firebase/FirebaseFunctionsHelper";
 
 // import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
@@ -45,7 +47,7 @@ if (DEBUG_MODE) {
     isCorrectAnswerChoice: false}
   ],
   correctAnswerTitle: "Harry Potter and the Sorcerer's Stone",
-  quoteText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
+  highlightedQuote: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
   highlightColor: "yellow",
   highlightNotes: "lalalala",
   dateHighlighted: "January 1, 2022",
@@ -63,7 +65,7 @@ if (DEBUG_MODE) {
   isCorrectAnswerChoice: false}
 
 ],
-  quoteText: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
+    highlightedQuote: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
 },
 ];  
 }
@@ -77,7 +79,7 @@ if (!DEBUG_MODE) {
 
 // FirebaseDatabase.initialize();
 
-console.log(questionsList)
+console.log("QuestionsList:" + questionsList)
 
 const App = ({ authObject }) => {
   const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
@@ -115,11 +117,14 @@ const App = ({ authObject }) => {
         if (!DEBUG_MODE) {
           questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
           console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
-          setImportIsLoading(false);
         }
+        setImportIsLoading(false);
       }
 
-      setQuizShouldStart(true);
+      if (questionsList?.length > 0) {
+        setQuizShouldStart(true);
+      }
+
 
     } else if (!DEBUG_MODE) {
       setIsLoggedIn(false);
@@ -205,8 +210,8 @@ const App = ({ authObject }) => {
   }
 
   const getCurrQuoteObject = () => {
-    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex].highlightedQuote.bookLink));
-    return questionsList[currQuestionIndex].highlightedQuote;
+    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex]));
+    return questionsList[currQuestionIndex]?.highlightedQuote;
 
     /*if (currQuestionIndex > 0) {
       let currQuestion = questionsList[currQuestionIndex];
@@ -227,7 +232,7 @@ const App = ({ authObject }) => {
 
 
   const quotesInitialized = isLoggedIn && questionsList?.length > 0;
-
+  
   // @ts-ignore
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
@@ -249,56 +254,65 @@ const App = ({ authObject }) => {
         }
 
         <Grid item xs={false} sm={2} lg={4}/>
+
         <Grid item xs={12} sm={8} lg={4}>
-          {!quotesInitialized && loadingProgress === -1 ?
             <GenericCard centered>
               <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
-              {/*<GoogleAuthButton authResponseHandler={authResponseHandler} />*/}
+              <Button onClick={()=>callUpdateUserHighlights()}>Import</Button>
             </GenericCard>
-
-          : importIsLoading ?
-              <ProgressCard progress={loadingProgress}/>
-            
-
-          : quizShouldStart || (questionsList?.length > 0 && currQuestionIndex >= 0)  ?
-            <GameCard
-              highlightedQuote={getCurrQuoteObject()}
-              quoteText={questionsList[currQuestionIndex].quoteText}
-              highlightColor={questionsList[currQuestionIndex].highlightColor}
-              highlightNotes={questionsList[currQuestionIndex].highlightNotes}
-              dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
-              bookLink={questionsList[currQuestionIndex].bookLink}
-              quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
-              shouldShowAnswer={shouldShowAnswer}
-              handleAnswerSelection={handleAnswerSelection}
-              handleNextQuestion={showNextQuestion}
-              incorrectAnswersSelected={incorrectAnswersSelected}
-              possibleTitles={questionsList[currQuestionIndex].titles}
-              isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
-              updateFavorites={updateFavorites}
-            />
-
-          : !isLoggedIn ?
-            <GameCard
-              quoteText={"Please sign in to your Google account."}
-              highlightColor={"yellow"}
-              shouldShowAnswer={shouldShowAnswer}
-              incorrectAnswersSelected={incorrectAnswersSelected}
-              possibleTitles={[]}
-            />
-          : loadingProgress === 100 && questionsList?.length === 0 ?
-          <GameCard
-            quoteText={"There are no Google Play Books notes in your account."}
-            highlightColor={"yellow"}
-            shouldShowAnswer={shouldShowAnswer}
-            incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={[]}
-          />
-          
-          : null
-          }
-          
         </Grid>
+
+        {/*<Grid item xs={12} sm={8} lg={4}>*/}
+        {/*  {!quotesInitialized && loadingProgress === -1 ?*/}
+        {/*    <GenericCard centered>*/}
+        {/*      <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>*/}
+        {/*      <Button>Import</Button>*/}
+        {/*      /!*<GoogleAuthButton authResponseHandler={authResponseHandler} />*!/*/}
+        {/*    </GenericCard>*/}
+
+        {/*  : importIsLoading ?*/}
+        {/*      <ProgressCard progress={loadingProgress}/>*/}
+        {/*    */}
+
+        {/*  : quizShouldStart || (quotesInitialized && questionsList?.length > 0 && currQuestionIndex >= 0)  ?*/}
+        {/*    <GameCard*/}
+        {/*      highlightedQuote={getCurrQuoteObject()}*/}
+        {/*      quoteText={questionsList[currQuestionIndex].quoteText}*/}
+        {/*      highlightColor={questionsList[currQuestionIndex].highlightColor}*/}
+        {/*      highlightNotes={questionsList[currQuestionIndex].highlightNotes}*/}
+        {/*      dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}*/}
+        {/*      bookLink={questionsList[currQuestionIndex].bookLink}*/}
+        {/*      quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}*/}
+        {/*      shouldShowAnswer={shouldShowAnswer}*/}
+        {/*      handleAnswerSelection={handleAnswerSelection}*/}
+        {/*      handleNextQuestion={showNextQuestion}*/}
+        {/*      incorrectAnswersSelected={incorrectAnswersSelected}*/}
+        {/*      possibleTitles={questionsList[currQuestionIndex].titles}*/}
+        {/*      isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)*/}
+        {/*      updateFavorites={updateFavorites}*/}
+        {/*    />*/}
+
+        {/*  : !isLoggedIn ?*/}
+        {/*    <GameCard*/}
+        {/*      quoteText={"Please sign in to your Google account."}*/}
+        {/*      highlightColor={"yellow"}*/}
+        {/*      shouldShowAnswer={shouldShowAnswer}*/}
+        {/*      incorrectAnswersSelected={incorrectAnswersSelected}*/}
+        {/*      possibleTitles={[]}*/}
+        {/*    />*/}
+        {/*  : loadingProgress === 100 && questionsList?.length === 0 ?*/}
+        {/*  <GameCard*/}
+        {/*    quoteText={"There are no Google Play Books notes in your account."}*/}
+        {/*    highlightColor={"yellow"}*/}
+        {/*    shouldShowAnswer={shouldShowAnswer}*/}
+        {/*    incorrectAnswersSelected={incorrectAnswersSelected}*/}
+        {/*    possibleTitles={[]}*/}
+        {/*  />*/}
+        {/*  */}
+        {/*  : null*/}
+        {/*  }*/}
+        {/*  */}
+        {/*</Grid>*/}
         <Grid item xs={false} sm={2} lg={4}/>
 
       </Grid>
