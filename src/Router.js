@@ -22,7 +22,7 @@ const Router = () => {
     const authResponseHandler = async (authResponse) => {
         setAuthObject(authResponse);
 
-        const { id_token, access_token } = authResponse?.tokenObj ?? {id_token: null, access_token: null};
+        const { id_token, access_token, expires_at } = authResponse?.tokenObj ?? {id_token: null, access_token: null};
 
         if (id_token && access_token) {
             const firebaseUserResult = await Firebase.authenticateWithTokens(id_token, access_token);
@@ -32,7 +32,11 @@ const Router = () => {
 
             //Store the access token and refresh token in the database so that
             //the backend can make Gdrive requests for the user later
-            await FirebaseDatabase.setUserRefChild("tokens", {accessToken: access_token, refreshToken: refreshToken});
+            await FirebaseDatabase.setUserRefChild("tokens", {
+                accessToken: access_token,
+                refreshToken: refreshToken,
+                expires_at: expires_at
+            });
 
 
 
