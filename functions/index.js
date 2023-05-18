@@ -9,6 +9,8 @@ const https = require("https");
 
 const { firebase_config } = require("./credentials.json");
 
+const {GoogleDriveApi} = require("./googleDrive/gdrive");
+
 admin.initializeApp();
 
 
@@ -42,33 +44,29 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
         // Refresh the access token (with refresh token) if expired
        if (access_token_is_expired(expires_at)) {
-            try {
-                access_token_obj = await tradeRefreshTokenForAccessToken(refresh_token);
-                access_token = access_token_obj.access_token; // Update local access token for later use
-
-                // Update access and refresh token in database
-                try {
-                    await admin.database().ref(`users/${uid}/tokens`).set({
-                        accessToken: access_token_obj.access_token,
-                        refreshToken: access_token_obj.refresh_token,
-                        expires_at: access_token_obj.expires_at
-                    });
-                    console.log("Updated access/refresh token in database.")
-                } catch (e) {
-                    console.error("Failed to update access/refresh token in database: " + e);
-                }
-
-
-
-            } catch (error) {
-                console.log("Error: ", error)
-                throw 'Unable to refresh access token'
-            }
+           try {
+               access_token = refresh_access_token(refresh_token)
+           } catch(e) {
+               throw new functions.https.HttpsError("unknown", e)
+           }
        }
 
-
-
         // Call GDrive API to update highlights
+        const driveApi = new GoogleDriveApi(access_token);
+        const folderId = await driveApi.getFolderId("Play Books Notes");
+        console.log("Got folder ID: " + folderId);
+        const filesList = await driveApi.getFilesInFolder("Play Books Notes");
+        console.log("Files list:")
+        console.log(filesList)
+        // const htmlExample = await driveApi.getFileHtml(filesList[0].id);
+        // console.log("Html for " + filesList[0].name);
+        // console.log(htmlExample)
+
+        // const htmlList = await driveApi.getAllFilesHtml(filesList, (progress, fileObject) => { //Progress is a number from 0 to 10
+        //     console.log("All files progress: " + progress)
+        //     console.log("Current html: ")
+        //     console.log(fileObject)
+        // });
 
     });
 
@@ -79,11 +77,35 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
 });
 
+
 const access_token_is_expired = (expires_at) => {
     // expires_at is a UNIX timestamp int
 
     const current_timestamp = Math.floor(Date.now() / 1000);
     return expires_at <= current_timestamp;
+}
+
+const refresh_access_token = async (refreshToken) => {
+    try {
+        const access_token_obj = await tradeRefreshTokenForAccessToken(refresh_token);
+
+        // Update access and refresh token in database
+        try {
+            await admin.database().ref(`users/${uid}/tokens`).set({
+                accessToken: access_token_obj.access_token,
+                refreshToken: access_token_obj.refresh_token,
+                expires_at: access_token_obj.expires_at
+            });
+            console.log("Updated access/refresh token in database.")
+
+            return access_token_obj.access_token;
+        } catch (e) {
+            console.error("Failed to update access/refresh token in database: " + e);
+        }
+    } catch (error) {
+        console.log("Error: ", error)
+        throw 'Unable to refresh access token'
+    }
 }
 
 const tradeRefreshTokenForAccessToken = (refreshToken) => {
