@@ -1,36 +1,20 @@
 const cheerio = require('cheerio')
 
-//const { authenticateApi, getFilesInFolder, loadApi, getAllFilesHtml } = require('./gdrive');
-
-const {GoogleDriveApi} = require("./googleDrive/gdrive")
-
-var bookTitles = [];
-
-export function initializeDriveApi() {
-    loadApi();
-}
-
-
-export function getTitlesList() { //TODO: This seems bad?
-    return bookTitles;
-}
-
 /* Get the quotes from Google Drive */
-export async function getQuotesList(authObject, callbackUpdateProgress) {
+// driveApi param is instance of GoogleDriveApi class
+async function getQuotesList(driveApi, callbackUpdateProgress) {
 
     return new Promise(async (resolve, reject) => {
-        
-        await authenticateApi(authObject);
 
         let quotesList = [];
 
-        let bookFiles = await getFilesInFolder("Play Books Notes");
+        let bookFiles = await driveApi.getFilesInFolder("Play Books Notes");
 
         /* USING ONLY A (random) PORTION OF BOOKFILES FOR TESTING */
-        const maxFiles = bookFiles.length;
+        const maxFiles = 5//bookFiles.length;
         if (maxFiles !== bookFiles.length) bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
 
-        const htmlList = await getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
+        const htmlList = await driveApi.getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10
             callbackUpdateProgress(progress); /* Update the progress bar */
         });
 
@@ -44,7 +28,6 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
 
                 /* SAVE BOOK TITLE IN LIST FOR FUTURE USE */
                 const bookTitle = bookQuotes[0].bookTitle
-                bookTitles.push(bookTitle)
 
                 //Add all the quotes from this book to the overall list of quotes (clustered by book)
                 quotesList.push({
@@ -53,17 +36,13 @@ export async function getQuotesList(authObject, callbackUpdateProgress) {
                 })
             }    
         }
-
-        QuizLocalStorage.saveCachedQuotesList(quotesList); // Cache the quotesList for next time
-        QuizLocalStorage.saveCachedTitlesList(bookTitles);
-
         resolve(quotesList);
     });
 }
 
 
 /* @param html: html of a single file in the Play Books Notes folder */
-export function getQuotesListFromHTML(html) {
+function getQuotesListFromHTML(html) {
     
     const $ = cheerio.load(html);
 
@@ -78,7 +57,7 @@ export function getQuotesListFromHTML(html) {
             const highlightColor = getHighlightColor($(element).attr("style"))
             const highlightNotes = getHighlightNotes($(element).parent()[0].parent)
             const dateHighlighted = getHighlightDate($(element).parent()[0].parent)
-            console.log($(element))
+
             const bookLink = $(element).parent().parent().parent().parent().parent().find('td[colspan="1"] > p > span > a').attr("href")
             if (text !== "") {
                 quotes.push(new HighlightedQuote(
@@ -88,7 +67,7 @@ export function getQuotesListFromHTML(html) {
                     dateHighlighted,
                     bookLink,
                     title,
-                    FavoritesLocalStorage.quoteIsFavorited(text), // TODO: Change to entire quote object (or however quotes should be compared)
+                    false, // TODO: how to handle favorites???
                 ));
             }
         });
@@ -138,4 +117,35 @@ function getHighlightDate(parentNode) {
         }
     }
 
+}
+
+class HighlightedQuote {
+
+    constructor(quoteText, highlightColor, highlightNotes, dateHighlighted, bookLink, bookTitle, quoteIsFavorited) {
+        this.quoteText = quoteText;
+        this.highlightColor = highlightColor;
+        this.highlightNotes = highlightNotes;
+        this.dateHighlighted = dateHighlighted;
+        this.bookLink = bookLink;
+        this.bookTitle = bookTitle;
+        this.quoteIsFavorited = quoteIsFavorited;
+    }
+
+    static fromJson(obj) {
+        return new HighlightedQuote(
+            obj.quoteText,
+            obj.highlightColor,
+            obj.highlightNotes,
+            obj.dateHighlighted,
+            obj.bookLink,
+            obj.bookTitle,
+            obj.quoteIsFavorited
+        );
+    }
+
+}
+
+
+module.exports = {
+    getQuotesList
 }

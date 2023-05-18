@@ -10,6 +10,7 @@ const https = require("https");
 const { firebase_config } = require("./credentials.json");
 
 const {GoogleDriveApi} = require("./googleDrive/gdrive");
+const { getQuotesList } = require("./googleDrive/gdriveNotesHelper");
 
 admin.initializeApp();
 
@@ -28,8 +29,8 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
     admin.database().ref(`users/${uid}/tokens`).once("value", async (snapshot) => {
         const val = snapshot.val();
         let access_token = val?.accessToken;
-        const refresh_token = val?.refreshToken;
-        const expires_at = val?.expires_at;
+        let refresh_token = val?.refreshToken;
+        let expires_at = val?.expires_at;
 
         console.log(val)
 
@@ -45,28 +46,27 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
         // Refresh the access token (with refresh token) if expired
        if (access_token_is_expired(expires_at)) {
            try {
-               access_token = refresh_access_token(refresh_token)
+               const access_token_obj = refresh_access_token(refresh_token)
+               access_token = access_token_obj.access_token
+               refresh_token = access_token_obj.refresh_token
+               expires_at = access_token_obj.expires_at
            } catch(e) {
                throw new functions.https.HttpsError("unknown", e)
            }
        }
 
         // Call GDrive API to update highlights
-        const driveApi = new GoogleDriveApi(access_token);
-        const folderId = await driveApi.getFolderId("Play Books Notes");
-        console.log("Got folder ID: " + folderId);
-        const filesList = await driveApi.getFilesInFolder("Play Books Notes");
-        console.log("Files list:")
-        console.log(filesList)
-        // const htmlExample = await driveApi.getFileHtml(filesList[0].id);
-        // console.log("Html for " + filesList[0].name);
-        // console.log(htmlExample)
+        const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
+        const quotesList = await getQuotesList(driveApi, ((progress, fileObject) => { //Progress is a number from 0 to 10
+                console.log("All files progress: " + progress)
+            //     console.log("Current html: ")
+            //     console.log(fileObject)
+            }));
 
-        // const htmlList = await driveApi.getAllFilesHtml(filesList, (progress, fileObject) => { //Progress is a number from 0 to 10
-        //     console.log("All files progress: " + progress)
-        //     console.log("Current html: ")
-        //     console.log(fileObject)
-        // });
+        // Save highlights to database
+        await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
+        await admin.database().ref(`users/${uid}/dateLastUpdated`).set(Math.floor(Date.now() / 1000));
+        console.log("Completed. Uploaded highlights to db.")
 
     });
 
@@ -98,7 +98,7 @@ const refresh_access_token = async (refreshToken) => {
             });
             console.log("Updated access/refresh token in database.")
 
-            return access_token_obj.access_token;
+            return access_token_obj;
         } catch (e) {
             console.error("Failed to update access/refresh token in database: " + e);
         }
