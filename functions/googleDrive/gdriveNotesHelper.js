@@ -11,7 +11,7 @@ async function getQuotesList(driveApi, callbackUpdateProgress) {
         let bookFiles = await driveApi.getFilesInFolder("Play Books Notes");
 
         /* USING ONLY A (random) PORTION OF BOOKFILES FOR TESTING */
-        const maxFiles = 5//bookFiles.length;
+        const maxFiles = bookFiles.length;
         if (maxFiles !== bookFiles.length) bookFiles = bookFiles.sort(() => Math.random() - Math.random()).slice(0, maxFiles);
 
         const htmlList = await driveApi.getAllFilesHtml(bookFiles, (progress) => { //Progress is a number from 0 to 10

@@ -22,8 +22,7 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
     // Identify the user
     const uid = context.auth.uid;
 
-    console.log("Hello. Called function!")
-
+    const taskId = Math.floor(Math.random()*1000000);
 
     // Fetch the user's access token and refresh token from the database
     admin.database().ref(`users/${uid}/tokens`).once("value", async (snapshot) => {
@@ -32,50 +31,70 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
         let refresh_token = val?.refreshToken;
         let expires_at = val?.expires_at;
 
-        console.log(val)
-
-        console.log("Fetched user's access token and refresh token: ");
-        console.log(access_token)
-        console.log(refresh_token)
-        console.log(expires_at)
-
         if (!refresh_token) {
+            await updateTaskFailure(uid, taskId);
             throw new functions.https.HttpsError("unknown", "Refresh token is missing from user database entry");
         }
 
         // Refresh the access token (with refresh token) if expired
-       if (access_token_is_expired(expires_at)) {
-           try {
-               const access_token_obj = refresh_access_token(refresh_token)
-               access_token = access_token_obj.access_token
-               refresh_token = access_token_obj.refresh_token
-               expires_at = access_token_obj.expires_at
-           } catch(e) {
-               throw new functions.https.HttpsError("unknown", e)
-           }
-       }
+        if (access_token_is_expired(expires_at)) {
+            try {
+                const access_token_obj = refresh_access_token(refresh_token)
+                access_token = access_token_obj.access_token
+                refresh_token = access_token_obj.refresh_token
+                expires_at = access_token_obj.expires_at
+            } catch (e) {
+                await updateTaskFailure(uid, taskId);
+                throw new functions.https.HttpsError("unknown", e)
+            }
+        }
 
         // Call GDrive API to update highlights
+        // TODO: Check what date highlights were last updated, and only pull highlights
+        // TODO: from book files that were modified past that date
         const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
         const quotesList = await getQuotesList(driveApi, ((progress, fileObject) => { //Progress is a number from 0 to 10
-                console.log("All files progress: " + progress)
+            console.log("All files progress: " + progress)
             //     console.log("Current html: ")
             //     console.log(fileObject)
-            }));
+        }));
 
         // Save highlights to database
         await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
-        await admin.database().ref(`users/${uid}/dateLastUpdated`).set(Math.floor(Date.now() / 1000));
-        console.log("Completed. Uploaded highlights to db.")
 
+        // Set UNIX timestamp to show update time
+        await admin.database().ref(`users/${uid}/dateLastUpdated`).set(Math.floor(Date.now() / 1000));
+
+        // Mark task as completed
+        await updateTaskCompleted(uid, taskId);
+
+        console.log("Completed. Uploaded highlights to db.")
+    }, async (error) => {
+        await updateTaskFailure(uid, taskId);
+        console.error("Error fetching user tokens from db: " + error)
     });
 
     return {
         message: "Successfully called function.",
         uid: uid,
+        taskId: taskId,
     };
 
 });
+
+const updateTaskFailure = async (uid, taskId) => {
+    await updateTaskStatus(uid, taskId, "failed");
+}
+
+const updateTaskCompleted = async (uid, taskId) => {
+    await updateTaskStatus(uid, taskId, "completed");
+}
+
+const updateTaskStatus = async (uid, taskId, statusString) => {
+    await admin.database().ref(`users/${uid}/tasks/${taskId}`).set({
+        status: statusString
+    });
+};
 
 
 const access_token_is_expired = (expires_at) => {
