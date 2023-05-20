@@ -12,7 +12,17 @@ import Grid from "@material-ui/core/Grid";
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
+import AppHeader from "../../Components/AppHeader";
+import { makeStyles } from "@material-ui/core/styles";
 // import Pagination from "@material-ui/lab/Pagination";
+
+const useStyles = makeStyles({
+    mainContainer: {
+        // backgroundColor: "#e3f2fd",
+        // background: "rgb(144,202,249) linear-gradient(180deg, rgba(144,202,249,1) 20%, rgba(227,242,253,1) 100%)",
+        height: "100vh",
+    }
+});
 
 
 const quotesList = QuizLocalStorage.getCachedQuotesList();
@@ -23,6 +33,8 @@ const itemsPerPage = 10;
 const paginationArray = [1,2,3]
 
 export const HighlightsBrowser = () => {
+
+    const classes = useStyles();
 
     const [ currPage, setCurrPage ] = useState(1);
     const [ collapseList, setCollapseList ] = useState({});
@@ -54,9 +66,17 @@ export const HighlightsBrowser = () => {
 
     const numPages = Math.ceil(filteredQuotesList.length / itemsPerPage);
 
-    //TODO: add pagination https://codesandbox.io/s/material-demo-g0xo5?file=/demo.js:2077-2087
     return (
-        <Grid container>
+        <Grid container direction="column" wrap="nowrap" className={classes.mainContainer}>
+
+            <Grid item container>
+
+            <Grid item xs={false} sm={2} lg={4}/>
+
+
+            <AppHeader/>
+
+
             <Grid item xs={false} sm={2} lg={2}/>
 
             <Grid item xs={12} sm={8} lg={8}>
@@ -118,6 +138,9 @@ export const HighlightsBrowser = () => {
             </Grid>
 
             <Grid item xs={false} sm={2} lg={2}/>
+
+            </Grid>
+
         </Grid>
 
 
