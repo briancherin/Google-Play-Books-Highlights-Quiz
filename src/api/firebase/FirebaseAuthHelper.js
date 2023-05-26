@@ -8,4 +8,6 @@ export class FirebaseAuthHelper {
             return null;
         }
     }
+
+    static
 }

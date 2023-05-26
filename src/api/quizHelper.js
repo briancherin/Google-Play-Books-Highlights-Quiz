@@ -1,10 +1,12 @@
-import { initializeDriveApi, getQuotesList, getTitlesList } from "./gdriveNotesHelper";
-import { QuizLocalStorage } from "./QuizLocalStorage";
+import { initializeDriveApi, getTitlesList } from "./googleDrive/gdriveNotesHelper";
+import { QuizLocalStorage } from "./storage/local/QuizLocalStorage";
+import { getQuotesList } from "./storage/firebase/QuotesFirebaseStorage";
 
 export async function getQuestionsListFromDrive(driveAuthObject, maxQuestions, callbackUpdateProgress) {
-    initializeDriveApi();
+    //initializeDriveApi();
 
-    const bookQuotesList = await getQuotesList(driveAuthObject, callbackUpdateProgress);
+    // const bookQuotesList = await getQuotesList(driveAuthObject, callbackUpdateProgress);
+    const bookQuotesList = await getQuotesList();
     const bookTitles = getTitlesList();
 
     return generateQuestionsList(bookQuotesList, maxQuestions, bookTitles);

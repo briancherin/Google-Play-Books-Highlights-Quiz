@@ -15,6 +15,9 @@ import StarIcon from "@material-ui/icons/Star";
 import { HighlightedQuote } from "./models/HighlightedQuote";
 import Firebase from "./api/firebase/Firebase";
 import { FirebaseAuthHelper } from "./api/firebase/FirebaseAuthHelper";
+import Button from "@material-ui/core/Button";
+import { callUpdateUserHighlights } from "./api/firebase/FirebaseFunctionsHelper";
+import { QuizLocalStorage } from "./api/storage/local/QuizLocalStorage";
 
 // import { FirebaseDatabase } from "./api/FirebaseDatabase";
 
@@ -32,7 +35,7 @@ const SCREEN_QUIZ = 1;
 const DEBUG_MODE = false;
 
 if (DEBUG_MODE) {
-  var questionsList = [{
+  var debug_questionsList = [{
    
     titles: [
     {title: "Harry Potter and the Sorcerer's Stone",
@@ -45,7 +48,7 @@ if (DEBUG_MODE) {
     isCorrectAnswerChoice: false}
   ],
   correctAnswerTitle: "Harry Potter and the Sorcerer's Stone",
-  quoteText: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
+  highlightedQuote: "One can never have enough socks. One can never have enough socksOne can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. . One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. One can never have enough socks. ",
   highlightColor: "yellow",
   highlightNotes: "lalalala",
   dateHighlighted: "January 1, 2022",
@@ -63,21 +66,19 @@ if (DEBUG_MODE) {
   isCorrectAnswerChoice: false}
 
 ],
-  quoteText: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
+    highlightedQuote: "Uno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetinesUno nunca tiene suficiente calcetines"
 },
 ];  
 }
-let usingCachedQuotes = false;
+/*let usingCachedQuotes = false;
 if (!DEBUG_MODE) {
   var questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
   if (questionsList && questionsList?.length > 0) {
     usingCachedQuotes = true;
   }
-}
+}*/
 
 // FirebaseDatabase.initialize();
-
-console.log(questionsList)
 
 const App = ({ authObject }) => {
   const [ currScreen, setCurrScreen ] = useState(SCREEN_QUIZ);
@@ -85,13 +86,18 @@ const App = ({ authObject }) => {
   const [ importIsLoading, setImportIsLoading ] = useState(false);
   const [ loadingProgress, setLoadingProgress ] = useState(-1);
 
+  const [ questionsList, setQuestionsList ] = useState(DEBUG_MODE ? debug_questionsList : []);
+  const [ quotesInitialized, setQuotesInitialized ] = useState(false);
+
+  const [ errorMessage, setErrorMessage ] = useState("");
+
   const [ quizShouldStart, setQuizShouldStart ] = useState(false);
 
   const [ currQuestionIndex, setCurrQuestionIndex ] = useState(0);
   const [ shouldShowAnswer, setShouldShowAnswer ] = useState(false);
   const [ incorrectAnswersSelected, setIncorrectAnswersSelected ] = useState([]);
 
-  const [ isLoggedIn, setIsLoggedIn ] = useState(false);
+  // const [ isLoggedIn, setIsLoggedIn ] = useState(false);
 
   const [ favoritesList, setFavoritesList ] = useState(FavoritesLocalStorage.getFavoritesList());
 
@@ -101,29 +107,16 @@ const App = ({ authObject }) => {
   const classes = useStyles();
 
 
-  useEffect(async () => {
+  useEffect(() => {
+    console.log("in useeffect")
+       if (!DEBUG_MODE) {
+           const questionsList = getQuestionsFromCachedQuotes(50); // TODO: Change the max? (Or get a new, unseen group once they are complete?)
+           if (questionsList && questionsList?.length > 0) {
+             setQuestionsList(questionsList);
+             setQuotesInitialized(true);
+          }
+       }
 
-    console.log("In useEffect. Is Firebase logged in?", Firebase.userIsLoggedIn(), FirebaseAuthHelper.getLoggedInUserId())
-
-
-    if (authObject && authObject.tokenObj) {
-      setIsLoggedIn(true);
-
-      if (!usingCachedQuotes) {
-        setImportIsLoading(true);
-        setLoadingProgress(0); //Initiate loading spinner
-        if (!DEBUG_MODE) {
-          questionsList = await getQuestionsListFromDrive(authObject, 30, updateLoadingProgress, false);
-          console.log("questionsList: " + questionsList.toString() + ", currQuestionNumber: " + currQuestionIndex);
-          setImportIsLoading(false);
-        }
-      }
-
-      setQuizShouldStart(true);
-
-    } else if (!DEBUG_MODE) {
-      setIsLoggedIn(false);
-    }
   }, [])
 
 
@@ -141,10 +134,10 @@ const App = ({ authObject }) => {
   }
 
   const clearQuizScreen = () => { //For when deleting the cached highlights. Question on screen should go away.
-    questionsList = []; 
+    setQuestionsList([]);
     resetQuizState();
-    setQuizShouldStart(false);
-    setIsLoggedIn(false);
+    setQuotesInitialized(false);
+    // setIsLoggedIn(false);
   }
 
   const showImportScreen = () => {
@@ -205,29 +198,39 @@ const App = ({ authObject }) => {
   }
 
   const getCurrQuoteObject = () => {
-    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex].highlightedQuote.bookLink));
-    return questionsList[currQuestionIndex].highlightedQuote;
-
-    /*if (currQuestionIndex > 0) {
-      let currQuestion = questionsList[currQuestionIndex];
-
-      if (currQuestion !== undefined) {
-        return new HighlightedQuote(
-            currQuestion.quoteText,
-            currQuestion.highlightColor,
-            currQuestion.highlightNotes,
-            currQuestion.dateHighlighted,
-            currQuestion.bookLink,
-            currQuestion.correctAnswerTitle,
-            currQuestion.quoteIsFavorited,
-        )
-      }
-    }*/
+    console.log("curr question: " + JSON.stringify(questionsList[currQuestionIndex]));
+    return questionsList[currQuestionIndex]?.highlightedQuote;
   }
 
+  const fetchHighlights = async () => {
+    try {
+      setImportIsLoading(true);
+      setLoadingProgress(0); //Initiate loading spinner
 
-  const quotesInitialized = isLoggedIn && questionsList?.length > 0;
+      const highlights = await callUpdateUserHighlights();
 
+      // Cache highlights and titles
+      QuizLocalStorage.saveCachedQuotesList(highlights); // Cache the quotesList for next time
+      console.log(highlights);
+      const uniqueTitles = [...new Set(highlights.map((h) => h.title))]
+      QuizLocalStorage.saveCachedTitlesList(uniqueTitles);
+
+      setQuestionsList(getQuestionsFromCachedQuotes(50));
+      setImportIsLoading(false);
+      setQuotesInitialized(true);
+    } catch (e) {
+      console.error(e);
+      setErrorMessage("Error importing highlights. Please try again.");
+      // TODO: Show error message if fetch fails
+    }
+  }
+
+  console.log("HI outside return: " )
+  console.log(questionsList)
+
+
+  // const quotesInitialized = isLoggedIn && questionsList?.length > 0;
+  
   // @ts-ignore
   return (
     //nowrap: Prevent container from shifting to the side when js console is open or when text is long
@@ -249,56 +252,59 @@ const App = ({ authObject }) => {
         }
 
         <Grid item xs={false} sm={2} lg={4}/>
+
         <Grid item xs={12} sm={8} lg={4}>
-          {!quotesInitialized && loadingProgress === -1 ?
-            <GenericCard centered>
-              <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
-              {/*<GoogleAuthButton authResponseHandler={authResponseHandler} />*/}
-            </GenericCard>
+          {!quotesInitialized ?
+              <GenericCard centered>
+                <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
+                <Button onClick={()=>fetchHighlights()}>Import</Button>
 
-          : importIsLoading ?
-              <ProgressCard progress={loadingProgress}/>
-            
+                {
+                  importIsLoading ?
+                      <ProgressCard progress={loadingProgress}/>
+                      : null
+                }
 
-          : quizShouldStart || (questionsList?.length > 0 && currQuestionIndex >= 0)  ?
-            <GameCard
-              highlightedQuote={getCurrQuoteObject()}
-              quoteText={questionsList[currQuestionIndex].quoteText}
-              highlightColor={questionsList[currQuestionIndex].highlightColor}
-              highlightNotes={questionsList[currQuestionIndex].highlightNotes}
-              dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
-              bookLink={questionsList[currQuestionIndex].bookLink}
-              quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
-              shouldShowAnswer={shouldShowAnswer}
-              handleAnswerSelection={handleAnswerSelection}
-              handleNextQuestion={showNextQuestion}
-              incorrectAnswersSelected={incorrectAnswersSelected}
-              possibleTitles={questionsList[currQuestionIndex].titles}
-              isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
-              updateFavorites={updateFavorites}
-            />
+                {
+                  errorMessage ?
+                      <Typography color={'error'}>{errorMessage}</Typography>
+                      : null
+                }
 
-          : !isLoggedIn ?
-            <GameCard
-              quoteText={"Please sign in to your Google account."}
-              highlightColor={"yellow"}
-              shouldShowAnswer={shouldShowAnswer}
-              incorrectAnswersSelected={incorrectAnswersSelected}
-              possibleTitles={[]}
-            />
-          : loadingProgress === 100 && questionsList?.length === 0 ?
-          <GameCard
-            quoteText={"There are no Google Play Books notes in your account."}
-            highlightColor={"yellow"}
-            shouldShowAnswer={shouldShowAnswer}
-            incorrectAnswersSelected={incorrectAnswersSelected}
-            possibleTitles={[]}
-          />
-          
-          : null
-          }
-          
-        </Grid>
+              </GenericCard>
+
+              : quizShouldStart || (quotesInitialized && questionsList?.length > 0 && currQuestionIndex >= 0)  ?
+                <GameCard
+                  highlightedQuote={getCurrQuoteObject()}
+                  quoteText={questionsList[currQuestionIndex].quoteText}
+                  highlightColor={questionsList[currQuestionIndex].highlightColor}
+                  highlightNotes={questionsList[currQuestionIndex].highlightNotes}
+                  dateHighlighted={questionsList[currQuestionIndex].dateHighlighted}
+                  bookLink={questionsList[currQuestionIndex].bookLink}
+                  quoteIsFavorited={questionsList[currQuestionIndex].quoteIsFavorited}
+                  shouldShowAnswer={shouldShowAnswer}
+                  handleAnswerSelection={handleAnswerSelection}
+                  handleNextQuestion={showNextQuestion}
+                  incorrectAnswersSelected={incorrectAnswersSelected}
+                  possibleTitles={questionsList[currQuestionIndex].titles}
+                  isFavorited={favoritesList.filter((obj) => obj.quoteText === questionsList[currQuestionIndex].quoteText).length > 0} //TODO: Do this better (compare by object. move to its own function)
+                  updateFavorites={updateFavorites}
+                />
+
+              : quotesInitialized && questionsList?.length === 0 ?
+                <GameCard
+                  quoteText={"There are no Google Play Books notes in your account."}
+                  highlightColor={"yellow"}
+                  shouldShowAnswer={shouldShowAnswer}
+                  incorrectAnswersSelected={incorrectAnswersSelected}
+                  possibleTitles={[]}
+                />
+
+                : null
+            }
+
+          </Grid>
+
         <Grid item xs={false} sm={2} lg={4}/>
 
       </Grid>

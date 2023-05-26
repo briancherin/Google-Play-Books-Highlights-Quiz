@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { google_cloud_credentials } from '../api/credentials.json';
 import GoogleLogin from 'react-google-login';
 
-import { initializeDriveApi } from '../api/gdriveNotesHelper';
+import { initializeDriveApi } from '../api/googleDrive/gdriveNotesHelper';
 
 const GoogleAuthButton = (props) => {
 

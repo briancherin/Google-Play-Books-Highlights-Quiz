@@ -1,5 +1,5 @@
 import { FirebaseAuthHelper } from "../firebase/FirebaseAuthHelper";
-import { FirebaseDatabase } from "../FirebaseDatabase";
+import { FirebaseDatabase } from "../storage/firebase/FirebaseDatabase";
 
 export class FavoritesFirebaseStorage {
 

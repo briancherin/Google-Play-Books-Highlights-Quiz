@@ -140,7 +140,7 @@ export async function getAllFilesHtml(fileList, progressCallback) {
    
 }
 
-/*  Using a batch Google Drive API call to download the files 
+/*  Using a batch Google Drive API call to download the files
 
     @param fileIdList   list of file objects from which to download the html for
                         file object: {name: <string>, id: <string>}
@@ -175,9 +175,9 @@ export async function getAllFilesHtmlWithBatchRequest(fileList, progressCallback
 
         batch.execute(() => {
             resolve(responseList);
-        });        
+        });
     })
 
-    
+
 
 }
