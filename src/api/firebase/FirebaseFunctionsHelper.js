@@ -14,7 +14,8 @@ export async function callUpdateUserHighlights() {
 
             // Wait for task to complete
             waitForTask(taskId, async () => {
-                const highlights = await fetchHighlights();
+                const highlightsDict = await fetchHighlights();
+                const highlights = Object.values(highlightsDict);
                 resolve(highlights);
             }, () => {
                 reject("Fetch user highlights failed.");

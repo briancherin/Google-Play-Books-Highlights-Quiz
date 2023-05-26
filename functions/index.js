@@ -49,21 +49,39 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
             }
         }
 
+        // Get lastUpdated field from db
+
+        let timestampLastUpdated;
+        try {
+            timestampLastUpdated = await getTimestampLastUpdated(uid);
+            console.log("Got timestamp last updated: " + timestampLastUpdated);
+        } catch (e) {
+            await updateTaskFailure(uid, taskId);
+            console.error("Error fetching timestampLastUpdated from db: " + error);
+        }
+
         // Call GDrive API to update highlights
-        // TODO: Check what date highlights were last updated, and only pull highlights
-        // TODO: from book files that were modified past that date
         const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
-        const quotesList = await getQuotesList(driveApi, ((progress, fileObject) => { //Progress is a number from 0 to 10
+        const quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
             console.log("All files progress: " + progress)
             //     console.log("Current html: ")
             //     console.log(fileObject)
         }));
 
+        // Transform quotesList to a dictionary where the key is the book title and the value is the original object
+        const quotesDict = quotesList.reduce((obj, item) => {
+            // obj is the accumulated dict
+            // item is the particular item in the original array we are looking at
+            obj[item.title] = item;
+            return obj;
+        }, {});
+
         // Save highlights to database
-        await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
+        // await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
+        await admin.database().ref(`users/${uid}/highlights`).update(quotesDict);
 
         // Set UNIX timestamp to show update time
-        await admin.database().ref(`users/${uid}/dateLastUpdated`).set(Math.floor(Date.now() / 1000));
+        await setTimestampLastUpdatedNow(uid);
 
         // Mark task as completed
         await updateTaskCompleted(uid, taskId);
@@ -176,4 +194,27 @@ const tradeRefreshTokenForAccessToken = (refreshToken) => {
     });
 
 
+}
+
+const getTimestampLastUpdated = async (uid) => {
+    return new Promise((resolve, reject) => {
+
+        admin.database().ref(`users/${uid}/dateLastUpdated`).once("value", async (snapshot) => {
+            const timestamp = snapshot.val();
+
+            if (timestamp == null) {
+                resolve(-1);
+            }
+
+            resolve(timestamp);
+        }, async (error) => {
+            reject(error);
+        });
+    });
+
+
+}
+
+const setTimestampLastUpdatedNow = async (uid) => {
+    await admin.database().ref(`users/${uid}/dateLastUpdated`).set(Math.floor(Date.now() / 1000));
 }
