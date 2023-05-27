@@ -28,7 +28,12 @@ async function getQuotesList(driveApi, timestampLastUpdated, callbackUpdateProgr
             const bookHtml = htmlList[i].html;
 
             /* Parse the html for this file and extract the list of quotes */
-            const bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
+            let bookQuotes;
+            try {
+                bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
+            } catch (e) {
+                reject(e);
+            }
 
             if (bookQuotes.length > 0) {
 

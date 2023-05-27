@@ -64,11 +64,17 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
         // Call GDrive API to update highlights
         const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
-        const quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
-            console.log("All files progress: " + progress)
-            //     console.log("Current html: ")
-            //     console.log(fileObject)
-        }));
+        let quotesList;
+        try {
+            quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
+                console.log("All files progress: " + progress)
+                //     console.log("Current html: ")
+                //     console.log(fileObject)
+            }));
+        } catch (e) {
+            await updateTaskFailure(uid, taskId);
+            console.error("Error getting quotes list or parsing quotes: " + error);
+        }
 
         // Transform quotesList to a dictionary where the key is the book title and the value is the original object
         const quotesDict = quotesList.reduce((obj, item) => {
