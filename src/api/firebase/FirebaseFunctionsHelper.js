@@ -6,61 +6,23 @@ import { FirebaseDatabase } from "../storage/firebase/FirebaseDatabase";
 export async function callUpdateUserHighlights() {
     return new Promise(async (resolve, reject) => {
 
-        const taskId = Math.floor(Math.random()*1000000);
-
         const UpdateUserHighlights = Firebase.functions.httpsCallable('updateUserHighlights');
 
         // Call cloud function
         try {
-            await UpdateUserHighlights({taskId: taskId});
+            await UpdateUserHighlights();
 
-            // Wait for task to complete
-            waitForTask(taskId, async () => {
-                const highlightsDict = await fetchHighlights();
-                const highlights = Object.values(highlightsDict);
-                resolve(highlights);
-            }, () => {
-                reject("Fetch user highlights failed.");
-            })
+            const highlightsDict = await fetchHighlights();
+            const highlights = Object.values(highlightsDict);
+            resolve(highlights);
 
         } catch (e) {
-            console.error("Failed: " + e)
-            reject(e);
+            console.error("Fetch user highlights failed: " + e)
+            reject("Fetch user highlights failed: " + e);
         }
     })
 }
 
-// monitor users/<userid>/tasks/<taskId> for status:"completed"|"failed"
-function waitForTask(taskId, onSuccess, onFailure) {
-    // TODO: Implement timeout? If takes too long (10 sec), return failure
-
-    FirebaseDatabase.getLoggedInUserRef()
-        .child(`tasks/${taskId}`)
-        .on("value", (snapshot) => {
-            const status = snapshot.val()?.status;
-            const description = snapshot.val()?.description;
-
-            if (status !== null) {
-                if (status === "completed") {
-                    // Task completed. Fetch highlights from db.
-                    onSuccess()
-                }
-                else if (status === "failed") {
-                    onFailure();
-
-                    if (description) {
-                        console.log(`Task ${taskId} failed: ${description}`);
-                    }
-                }
-
-
-                // Delete task
-                FirebaseDatabase.getLoggedInUserRef()
-                    .child(`tasks/${taskId}`).remove();
-
-            }
-        });
-}
 
 async function fetchHighlights() {
     return new Promise((resolve, reject) => {

@@ -26,8 +26,6 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
     // Identify the user
     const uid = context.auth.uid;
 
-    const taskId = data.taskId;
-
     // Fetch the user's access token and refresh token from the database
     return new Promise((resolve, reject) => {
         admin.database().ref(`users/${uid}/tokens`).once("value", async (snapshot) => {
@@ -37,8 +35,7 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
             let expires_at = val?.expires_at;
 
             if (!refresh_token) {
-                await updateTaskFailure(uid, taskId, "Refresh token is missing from user database entry");
-                throw new functions.https.HttpsError("unknown", "Refresh token is missing from user database entry");
+                reject("Refresh token is missing from user database entry");
             }
 
             // Refresh the access token (with refresh token) if expired
@@ -49,7 +46,6 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                     refresh_token = access_token_obj.refresh_token
                     expires_at = access_token_obj.expires_at
                 } catch (e) {
-                    await updateTaskFailure(uid, taskId, e);
                     throw new functions.https.HttpsError("unknown", e)
                 }
             }
@@ -61,8 +57,7 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                 timestampLastUpdated = await getTimestampLastUpdated(uid);
                 console.log("Got timestamp last updated: " + timestampLastUpdated);
             } catch (e) {
-                await updateTaskFailure(uid, taskId, "Error fetching timestampLastUpdated from db: " + error);
-                console.error("Error fetching timestampLastUpdated from db: " + error);
+                reject("Error fetching timestampLastUpdated from db: " + error);
             }
 
             // Call GDrive API to update highlights
@@ -75,8 +70,7 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                     //     console.log(fileObject)
                 }));
             } catch (e) {
-                await updateTaskFailure(uid, taskId, "Error getting quotes list or parsing quotes: " + error);
-                console.error("Error getting quotes list or parsing quotes: " + error);
+                reject("Error getting quotes list or parsing quotes: " + error);
             }
 
             // Transform quotesList to a dictionary where the key is the book title and the value is the original object
@@ -95,20 +89,14 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
             // Set UNIX timestamp to show update time
             await setTimestampLastUpdatedNow(uid);
 
-            // Mark task as completed
-            await updateTaskCompleted(uid, taskId);
-
-
             console.log("Completed. Uploaded highlights to db.")
 
             resolve( {
                 message: "Successfully called function.",
                 uid: uid,
-                taskId: taskId,
             });
         }, async (error) => {
-            await updateTaskFailure(uid, taskId, "Error fetching user tokens from db: " + error);
-            console.error("Error fetching user tokens from db: " + error)
+            reject("Error fetching user tokens from db: " + error)
         });
     });
 
@@ -118,21 +106,6 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
 
 });
-
-const updateTaskFailure = async (uid, taskId, description) => {
-    await updateTaskStatus(uid, taskId, "failed", description);
-}
-
-const updateTaskCompleted = async (uid, taskId) => {
-    await updateTaskStatus(uid, taskId, "completed");
-}
-
-const updateTaskStatus = async (uid, taskId, statusString, message="") => {
-    await admin.database().ref(`users/${uid}/tasks/${taskId}`).set({
-        status: statusString,
-        description: message
-    });
-};
 
 
 const access_token_is_expired = (expires_at) => {
