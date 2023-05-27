@@ -3,7 +3,7 @@ import * as firebase from 'firebase';
 
 import { firebase_config } from '../credentials.json';
 
-const USE_FUNCTIONS_EMULATOR = true; // Use emulator for local development
+const USE_FUNCTIONS_EMULATOR = false; // Use emulator for local development
 
 
 class Firebase {

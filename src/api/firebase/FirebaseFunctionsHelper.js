@@ -5,12 +5,14 @@ import { FirebaseDatabase } from "../storage/firebase/FirebaseDatabase";
 // onReceiveHighlights: callback function that takes highlights list as param
 export async function callUpdateUserHighlights() {
     return new Promise(async (resolve, reject) => {
+
+        const taskId = Math.floor(Math.random()*1000000);
+
         const UpdateUserHighlights = Firebase.functions.httpsCallable('updateUserHighlights');
 
-        // Call cloud function and get taskId
+        // Call cloud function
         try {
-            const result = await UpdateUserHighlights();
-            const taskId = result.data.taskId;
+            await UpdateUserHighlights({taskId: taskId});
 
             // Wait for task to complete
             waitForTask(taskId, async () => {
@@ -22,6 +24,7 @@ export async function callUpdateUserHighlights() {
             })
 
         } catch (e) {
+            console.error("Failed: " + e)
             reject(e);
         }
     })
@@ -35,6 +38,7 @@ function waitForTask(taskId, onSuccess, onFailure) {
         .child(`tasks/${taskId}`)
         .on("value", (snapshot) => {
             const status = snapshot.val()?.status;
+            const description = snapshot.val()?.description;
 
             if (status !== null) {
                 if (status === "completed") {
@@ -42,8 +46,13 @@ function waitForTask(taskId, onSuccess, onFailure) {
                     onSuccess()
                 }
                 else if (status === "failed") {
-                    onFailure()
+                    onFailure();
+
+                    if (description) {
+                        console.log(`Task ${taskId} failed: ${description}`);
+                    }
                 }
+
 
                 // Delete task
                 FirebaseDatabase.getLoggedInUserRef()

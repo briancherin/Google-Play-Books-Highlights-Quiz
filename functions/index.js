@@ -1,5 +1,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+require("firebase-functions/logger/compat"); // Use console.log() for logging
+
 
 const crypto = require("crypto");
 
@@ -24,102 +26,111 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
     // Identify the user
     const uid = context.auth.uid;
 
-    const taskId = Math.floor(Math.random()*1000000);
+    const taskId = data.taskId;
 
     // Fetch the user's access token and refresh token from the database
-    admin.database().ref(`users/${uid}/tokens`).once("value", async (snapshot) => {
-        const val = snapshot.val();
-        let access_token = val?.accessToken;
-        let refresh_token = val?.refreshToken;
-        let expires_at = val?.expires_at;
+    return new Promise((resolve, reject) => {
+        admin.database().ref(`users/${uid}/tokens`).once("value", async (snapshot) => {
+            const val = snapshot.val();
+            let access_token = val?.accessToken;
+            let refresh_token = val?.refreshToken;
+            let expires_at = val?.expires_at;
 
-        if (!refresh_token) {
-            await updateTaskFailure(uid, taskId);
-            throw new functions.https.HttpsError("unknown", "Refresh token is missing from user database entry");
-        }
-
-        // Refresh the access token (with refresh token) if expired
-        if (access_token_is_expired(expires_at)) {
-            try {
-                const access_token_obj = refresh_access_token(refresh_token)
-                access_token = access_token_obj.access_token
-                refresh_token = access_token_obj.refresh_token
-                expires_at = access_token_obj.expires_at
-            } catch (e) {
-                await updateTaskFailure(uid, taskId);
-                throw new functions.https.HttpsError("unknown", e)
+            if (!refresh_token) {
+                await updateTaskFailure(uid, taskId, "Refresh token is missing from user database entry");
+                throw new functions.https.HttpsError("unknown", "Refresh token is missing from user database entry");
             }
-        }
 
-        // Get lastUpdated field from db
+            // Refresh the access token (with refresh token) if expired
+            if (access_token_is_expired(expires_at)) {
+                try {
+                    const access_token_obj = refresh_access_token(refresh_token)
+                    access_token = access_token_obj.access_token
+                    refresh_token = access_token_obj.refresh_token
+                    expires_at = access_token_obj.expires_at
+                } catch (e) {
+                    await updateTaskFailure(uid, taskId, e);
+                    throw new functions.https.HttpsError("unknown", e)
+                }
+            }
 
-        let timestampLastUpdated;
-        try {
-            timestampLastUpdated = await getTimestampLastUpdated(uid);
-            console.log("Got timestamp last updated: " + timestampLastUpdated);
-        } catch (e) {
-            await updateTaskFailure(uid, taskId);
-            console.error("Error fetching timestampLastUpdated from db: " + error);
-        }
+            // Get lastUpdated field from db
 
-        // Call GDrive API to update highlights
-        const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
-        let quotesList;
-        try {
-            quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
-                console.log("All files progress: " + progress)
-                //     console.log("Current html: ")
-                //     console.log(fileObject)
-            }));
-        } catch (e) {
-            await updateTaskFailure(uid, taskId);
-            console.error("Error getting quotes list or parsing quotes: " + error);
-        }
+            let timestampLastUpdated;
+            try {
+                timestampLastUpdated = await getTimestampLastUpdated(uid);
+                console.log("Got timestamp last updated: " + timestampLastUpdated);
+            } catch (e) {
+                await updateTaskFailure(uid, taskId, "Error fetching timestampLastUpdated from db: " + error);
+                console.error("Error fetching timestampLastUpdated from db: " + error);
+            }
 
-        // Transform quotesList to a dictionary where the key is the book title and the value is the original object
-        const quotesDict = quotesList.reduce((obj, item) => {
-            // obj is the accumulated dict
-            // item is the particular item in the original array we are looking at
-            const titleHash = crypto.createHash('md5').update(item.title).digest('hex');
-            obj[titleHash] = item;
-            return obj;
-        }, {});
+            // Call GDrive API to update highlights
+            const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
+            let quotesList;
+            try {
+                quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
+                    console.log("All files progress: " + progress)
+                    //     console.log("Current html: ")
+                    //     console.log(fileObject)
+                }));
+            } catch (e) {
+                await updateTaskFailure(uid, taskId, "Error getting quotes list or parsing quotes: " + error);
+                console.error("Error getting quotes list or parsing quotes: " + error);
+            }
 
-        // Save highlights to database
-        // await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
-        await admin.database().ref(`users/${uid}/highlights`).update(quotesDict);
+            // Transform quotesList to a dictionary where the key is the book title and the value is the original object
+            const quotesDict = quotesList.reduce((obj, item) => {
+                // obj is the accumulated dict
+                // item is the particular item in the original array we are looking at
+                const titleHash = crypto.createHash('md5').update(item.title).digest('hex');
+                obj[titleHash] = item;
+                return obj;
+            }, {});
 
-        // Set UNIX timestamp to show update time
-        await setTimestampLastUpdatedNow(uid);
+            // Save highlights to database
+            // await admin.database().ref(`users/${uid}/highlights`).set(quotesList);
+            await admin.database().ref(`users/${uid}/highlights`).update(quotesDict);
 
-        // Mark task as completed
-        await updateTaskCompleted(uid, taskId);
+            // Set UNIX timestamp to show update time
+            await setTimestampLastUpdatedNow(uid);
 
-        console.log("Completed. Uploaded highlights to db.")
-    }, async (error) => {
-        await updateTaskFailure(uid, taskId);
-        console.error("Error fetching user tokens from db: " + error)
+            // Mark task as completed
+            await updateTaskCompleted(uid, taskId);
+
+
+            console.log("Completed. Uploaded highlights to db.")
+
+            resolve( {
+                message: "Successfully called function.",
+                uid: uid,
+                taskId: taskId,
+            });
+        }, async (error) => {
+            await updateTaskFailure(uid, taskId, "Error fetching user tokens from db: " + error);
+            console.error("Error fetching user tokens from db: " + error)
+        });
     });
 
-    return {
-        message: "Successfully called function.",
-        uid: uid,
-        taskId: taskId,
-    };
+
+
+
+
 
 });
 
-const updateTaskFailure = async (uid, taskId) => {
-    await updateTaskStatus(uid, taskId, "failed");
+const updateTaskFailure = async (uid, taskId, description) => {
+    await updateTaskStatus(uid, taskId, "failed", description);
 }
 
 const updateTaskCompleted = async (uid, taskId) => {
     await updateTaskStatus(uid, taskId, "completed");
 }
 
-const updateTaskStatus = async (uid, taskId, statusString) => {
+const updateTaskStatus = async (uid, taskId, statusString, message="") => {
     await admin.database().ref(`users/${uid}/tasks/${taskId}`).set({
-        status: statusString
+        status: statusString,
+        description: message
     });
 };
 

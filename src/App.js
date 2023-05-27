@@ -219,6 +219,7 @@ const App = ({ authObject }) => {
       setImportIsLoading(false);
       setQuotesInitialized(true);
     } catch (e) {
+      console.error("Failed to fetch highlights:")
       console.error(e);
       setErrorMessage("Error importing highlights. Please try again.");
       // TODO: Show error message if fetch fails
