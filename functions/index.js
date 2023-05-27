@@ -1,6 +1,8 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
+const crypto = require("crypto");
+
 const https = require("https");
 
 // const fetch = require("node-fetch");
@@ -72,7 +74,8 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
         const quotesDict = quotesList.reduce((obj, item) => {
             // obj is the accumulated dict
             // item is the particular item in the original array we are looking at
-            obj[item.title] = item;
+            const titleHash = crypto.createHash('md5').update(item.title).digest('hex');
+            obj[titleHash] = item;
             return obj;
         }, {});
 
