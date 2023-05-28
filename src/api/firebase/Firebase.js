@@ -47,6 +47,7 @@ class Firebase {
             this.initialized = true;
 
             if (USE_FUNCTIONS_EMULATOR) {
+                console.info("Using functions emulator.")
                 app.functions().useFunctionsEmulator("http://localhost:5001"); // For local testing
             }
         }
