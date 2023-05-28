@@ -2,13 +2,19 @@ const cheerio = require('cheerio')
 
 /* Get the quotes from Google Drive */
 // driveApi param is instance of GoogleDriveApi class
-async function getQuotesList(driveApi, callbackUpdateProgress) {
+// timestampLastUpdated: only fetch highlights made past this timestamp, or -1 to fetch all
+async function getQuotesList(driveApi, timestampLastUpdated, callbackUpdateProgress) {
 
     return new Promise(async (resolve, reject) => {
 
         let quotesList = [];
 
-        let bookFiles = await driveApi.getFilesInFolder("Play Books Notes");
+        let bookFiles;
+
+        bookFiles = await driveApi.getFilesInFolder("Play Books Notes", timestampLastUpdated);
+
+        console.log("Books to load quotes from after timestamp " + timestampLastUpdated + ":");
+        console.log(bookFiles);
 
         /* USING ONLY A (random) PORTION OF BOOKFILES FOR TESTING */
         const maxFiles = bookFiles.length;
@@ -22,7 +28,12 @@ async function getQuotesList(driveApi, callbackUpdateProgress) {
             const bookHtml = htmlList[i].html;
 
             /* Parse the html for this file and extract the list of quotes */
-            const bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
+            let bookQuotes;
+            try {
+                bookQuotes = getQuotesListFromHTML(bookHtml); //All the quotes for this particular book
+            } catch (e) {
+                reject(e);
+            }
 
             if (bookQuotes.length > 0) {
 

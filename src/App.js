@@ -90,6 +90,7 @@ const App = ({ authObject }) => {
   const [ quotesInitialized, setQuotesInitialized ] = useState(false);
 
   const [ errorMessage, setErrorMessage ] = useState("");
+  const [ progressUpdateText, setProgressUpdateText ] = useState("");
 
   const [ quizShouldStart, setQuizShouldStart ] = useState(false);
 
@@ -206,8 +207,12 @@ const App = ({ authObject }) => {
     try {
       setImportIsLoading(true);
       setLoadingProgress(0); //Initiate loading spinner
+      setProgressUpdateText("");
 
-      const highlights = await callUpdateUserHighlights();
+      const highlights = await callUpdateUserHighlights((progressUpdate) => {
+        console.log("Got progress update: " + progressUpdate)
+        setProgressUpdateText(progressUpdate);
+      });
 
       // Cache highlights and titles
       QuizLocalStorage.saveCachedQuotesList(highlights); // Cache the quotesList for next time
@@ -219,6 +224,7 @@ const App = ({ authObject }) => {
       setImportIsLoading(false);
       setQuotesInitialized(true);
     } catch (e) {
+      console.error("Failed to fetch highlights:")
       console.error(e);
       setErrorMessage("Error importing highlights. Please try again.");
       // TODO: Show error message if fetch fails
@@ -256,12 +262,14 @@ const App = ({ authObject }) => {
         <Grid item xs={12} sm={8} lg={4}>
           {!quotesInitialized ?
               <GenericCard centered>
-                <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
-                <Button onClick={()=>fetchHighlights()}>Import</Button>
+                 <div>
+                    <Typography variant="h5" style={{padding: "20px"}}>Import your highlights from Google Drive.</Typography>
+                    { !importIsLoading ? <Button onClick={()=>fetchHighlights()}>Import</Button> : null }
+                  </div>
 
                 {
                   importIsLoading ?
-                      <ProgressCard progress={loadingProgress}/>
+                      <ProgressCard progress={loadingProgress} text = {progressUpdateText ?? "Loading..."} />
                       : null
                 }
 

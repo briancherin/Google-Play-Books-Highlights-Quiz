@@ -22,13 +22,19 @@ class GoogleDriveApi {
          });
     }
 
-    async getFilesInFolder(folderName) {
+    // timestampLastUpdated: only fetch files created/modfied past this UNIX timestamp, or -1 to fetch all
+    async getFilesInFolder(folderName, timestampLastUpdated) {
         const folderId = await this.getFolderId(folderName);
-        // TODO: currently, max limit is 100 files. either increase limit, or use pagination: https://developers.google.com/drive/api/v2/reference/children/list#javascript
+
+        let timestampQueryString = '';
+        if (timestampLastUpdated !== -1) {
+            const rfcTimestamp = new Date(timestampLastUpdated * 1000).toISOString();
+            timestampQueryString = ` and modifiedTime >= '${rfcTimestamp}'`;
+        }
 
         return new Promise((resolve, reject) => {
             this.drive.files.list({
-                q: `mimeType != 'application/vnd.google-apps.folder' and '${folderId}' in parents`,
+                q: `mimeType != 'application/vnd.google-apps.folder' and '${folderId}' in parents ${timestampQueryString}`,
                 fields: "nextPageToken, files(id, name)",
                 pageSize: 500
             }).then(function(response) {
