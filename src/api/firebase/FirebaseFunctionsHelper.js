@@ -3,7 +3,7 @@ import { FirebaseDatabase } from "../storage/firebase/FirebaseDatabase";
 
 
 // onReceiveHighlights: callback function that takes highlights list as param
-export async function callUpdateUserHighlights() {
+export async function callUpdateUserHighlights(onProgressUpdate) {
     return new Promise(async (resolve, reject) => {
 
         const taskId = Math.floor(Math.random()*1000000);
@@ -12,16 +12,16 @@ export async function callUpdateUserHighlights() {
 
         // Call cloud function
         try {
-            await UpdateUserHighlights({taskId: taskId});
-
-            // Wait for task to complete
+            // Start listening for task updates
             waitForTask(taskId, async () => {
                 const highlightsDict = await fetchHighlights();
                 const highlights = Object.values(highlightsDict);
                 resolve(highlights);
             }, () => {
                 reject("Fetch user highlights failed.");
-            })
+            }, onProgressUpdate);
+
+            await UpdateUserHighlights({taskId: taskId});
 
         } catch (e) {
             console.error("Failed: " + e)
@@ -31,7 +31,7 @@ export async function callUpdateUserHighlights() {
 }
 
 // monitor users/<userid>/tasks/<taskId> for status:"completed"|"failed"
-function waitForTask(taskId, onSuccess, onFailure) {
+function waitForTask(taskId, onSuccess, onFailure, onProgressUpdate) {
     // TODO: Implement timeout? If takes too long (10 sec), return failure
 
     FirebaseDatabase.getLoggedInUserRef()
@@ -44,22 +44,27 @@ function waitForTask(taskId, onSuccess, onFailure) {
                 if (status === "completed") {
                     // Task completed. Fetch highlights from db.
                     onSuccess()
+                    deleteTask(taskId);
                 }
                 else if (status === "failed") {
                     onFailure();
+                    deleteTask(taskId);
 
                     if (description) {
                         console.log(`Task ${taskId} failed: ${description}`);
                     }
                 }
-
-
-                // Delete task
-                FirebaseDatabase.getLoggedInUserRef()
-                    .child(`tasks/${taskId}`).remove();
+                else if (status === "progress") {
+                    onProgressUpdate(description);
+                }
 
             }
         });
+}
+
+async function deleteTask(taskId) {
+    await FirebaseDatabase.getLoggedInUserRef()
+        .child(`tasks/${taskId}`).remove();
 }
 
 async function fetchHighlights() {

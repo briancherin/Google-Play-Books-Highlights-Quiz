@@ -65,19 +65,30 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                 console.error("Error fetching timestampLastUpdated from db: " + error);
             }
 
+            await updateTaskProgress(uid, taskId, "Importing highlights from Google Drive..."); // Description will be shown on frontend UI
+
             // Call GDrive API to update highlights
             const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
             let quotesList;
             try {
-                quotesList = await getQuotesList(driveApi, timestampLastUpdated, ((progress, fileObject) => { //Progress is a number from 0 to 10
+                let maxProgressInt = 0;
+                quotesList = await getQuotesList(driveApi, timestampLastUpdated, (async (progress, fileObject) => { //Progress is a number from 0 to 100
                     console.log("All files progress: " + progress)
-                    //     console.log("Current html: ")
-                    //     console.log(fileObject)
+
+
+                   if (progress >= maxProgressInt) {
+                        const str = `${Math.round(progress)}%`;
+                        maxProgressInt += 10;
+                        await updateTaskProgress(uid, taskId, `Importing highlights from Google Drive... ${str}`)
+                   }
+
                 }));
             } catch (e) {
                 await updateTaskFailure(uid, taskId, "Error getting quotes list or parsing quotes: " + error);
                 console.error("Error getting quotes list or parsing quotes: " + error);
             }
+
+            await updateTaskProgress(uid, taskId, "Processing highlights..."); // Description will be shown on frontend UI
 
             // Transform quotesList to a dictionary where the key is the book title and the value is the original object
             const quotesDict = quotesList.reduce((obj, item) => {
@@ -125,6 +136,10 @@ const updateTaskFailure = async (uid, taskId, description) => {
 
 const updateTaskCompleted = async (uid, taskId) => {
     await updateTaskStatus(uid, taskId, "completed");
+}
+
+const updateTaskProgress = async (uid, taskId, description) => {
+    await updateTaskStatus(uid, taskId, "progress", description);
 }
 
 const updateTaskStatus = async (uid, taskId, statusString, message="") => {
