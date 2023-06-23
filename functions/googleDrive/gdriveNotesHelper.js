@@ -43,7 +43,8 @@ async function getQuotesList(driveApi, timestampLastUpdated, callbackUpdateProgr
                 //Add all the quotes from this book to the overall list of quotes (clustered by book)
                 quotesList.push({
                     title: bookTitle,   //Mark each quote as belonging to this particular book
-                    quotes: bookQuotes
+                    quotes: bookQuotes,
+                    dateModified: htmlList[i].dateModified
                 })
             }    
         }

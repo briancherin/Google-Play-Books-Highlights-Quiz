@@ -11,7 +11,7 @@ class GoogleDriveApi {
          return new Promise((resolve, reject) => {
                  this.drive.files.list({
                      q: `mimeType='application/vnd.google-apps.folder' and name = '${folderName}'`,
-                     fields: "nextPageToken, files(id, name)"
+                     fields: "nextPageToken, files(id, name, modifiedTime)"
                  }).then(function(response) {
                      console.log("getFolderId Response:")
                      console.log(response.data.files)
@@ -35,7 +35,7 @@ class GoogleDriveApi {
         return new Promise((resolve, reject) => {
             this.drive.files.list({
                 q: `mimeType != 'application/vnd.google-apps.folder' and '${folderId}' in parents ${timestampQueryString}`,
-                fields: "nextPageToken, files(id, name)",
+                fields: "nextPageToken, files(id, name, modifiedTime)",
                 pageSize: 500
             }).then(function(response) {
                 resolve(response.data.files);
@@ -110,7 +110,8 @@ class GoogleDriveApi {
 
                             const fileObject = {
                                 name: fileList[i].name,
-                                html: html
+                                html: html,
+                                dateModified: new Date(fileList[i].modifiedTime).getTime()
                             }
 
                             responseList.push(fileObject);
