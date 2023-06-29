@@ -1,9 +1,13 @@
 const { google } = require('googleapis')
+const { google_cloud_credentials } = require('../credentials1.json')
+
 
 class GoogleDriveApi {
     constructor(access_token, refresh_token, expires_at) {
-        const authClient = new google.auth.OAuth2();
-        authClient.setCredentials({access_token: access_token, refresh_token: refresh_token, expiry_date: expires_at});
+        const authClient = new google.auth.OAuth2(google_cloud_credentials.web.client_id,
+            google_cloud_credentials.web.client_secret,);
+        // authClient.setCredentials({access_token: access_token, refresh_token: refresh_token, expiry_date: expires_at});
+        authClient.setCredentials({refresh_token: refresh_token});
         this.drive = google.drive({version: 'v3', auth: authClient});
     }
 

@@ -16,10 +16,40 @@ const { firebase_config } = require("./credentials.json");
 const {GoogleDriveApi} = require("./googleDrive/gdrive");
 const { getQuotesList } = require("./googleDrive/gdriveNotesHelper");
 
+const { exchangeAuthCodeForAccessAndRefresh } = require("./auth/tokenExchange")
+
 admin.initializeApp();
 
 
 // Callable function: https://firebase.google.com/docs/functions/callable
+
+exports.oauth2Callback = functions.https.onCall((data, context) => {
+
+    const authCode = data.authCode;
+    const uid = context.auth.uid;
+
+    return new Promise(async (resolve, reject) => {
+        const tokens = await exchangeAuthCodeForAccessAndRefresh(authCode)
+        console.log(tokens)
+
+        // Store access token, expiry date, and refresh token in database
+        await admin.database().ref(`users/${uid}/tokens`).set({
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token,
+            expires_at: tokens.expiry_date
+        });
+
+        // Return id token and access token
+        resolve( {
+            id_token: tokens.id_token,
+            access_token: tokens.access_token
+        });
+    })
+
+
+
+})
+
 
 exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
@@ -41,10 +71,13 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                 throw new functions.https.HttpsError("unknown", "Refresh token is missing from user database entry");
             }
 
+            console.log("Hello 1")
+/*
             // Refresh the access token (with refresh token) if expired
             if (access_token_is_expired(expires_at)) {
+                console.log("Access token is expired.")
                 try {
-                    const access_token_obj = refresh_access_token(refresh_token)
+                    const access_token_obj = await refresh_access_token(uid, refresh_token)
                     access_token = access_token_obj.access_token
                     refresh_token = access_token_obj.refresh_token
                     expires_at = access_token_obj.expires_at
@@ -52,7 +85,7 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                     await updateTaskFailure(uid, taskId, e);
                     throw new functions.https.HttpsError("unknown", e)
                 }
-            }
+            }*/
 
             // Get lastUpdated field from db
 
@@ -61,11 +94,13 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
                 timestampLastUpdated = await getTimestampLastUpdated(uid);
                 console.log("Got timestamp last updated: " + timestampLastUpdated);
             } catch (e) {
-                await updateTaskFailure(uid, taskId, "Error fetching timestampLastUpdated from db: " + error);
-                console.error("Error fetching timestampLastUpdated from db: " + error);
+                await updateTaskFailure(uid, taskId, "Error fetching timestampLastUpdated from db: " + e);
+                console.error("Error fetching timestampLastUpdated from db: " + e);
             }
 
             await updateTaskProgress(uid, taskId, "Importing highlights from Google Drive..."); // Description will be shown on frontend UI
+
+            console.log("Sending to gdrive api: access token: " + access_token + "\nRefresh token: " + refresh_token + "\nExpires at: " + expires_at)
 
             // Call GDrive API to update highlights
             const driveApi = new GoogleDriveApi(access_token, refresh_token, expires_at);
@@ -84,8 +119,8 @@ exports.updateUserHighlights = functions.https.onCall((data, context) => {
 
                 }));
             } catch (e) {
-                await updateTaskFailure(uid, taskId, "Error getting quotes list or parsing quotes: " + error);
-                console.error("Error getting quotes list or parsing quotes: " + error);
+                await updateTaskFailure(uid, taskId, "Error getting quotes list or parsing quotes: " + e);
+                console.error("Error getting quotes list or parsing quotes: " + e);
             }
 
             await updateTaskProgress(uid, taskId, "Processing highlights..."); // Description will be shown on frontend UI
@@ -153,13 +188,15 @@ const updateTaskStatus = async (uid, taskId, statusString, message="") => {
 const access_token_is_expired = (expires_at) => {
     // expires_at is a UNIX timestamp int
 
-    const current_timestamp = Math.floor(Date.now() / 1000);
+    const current_timestamp = Math.floor(Date.now());
     return expires_at <= current_timestamp;
 }
 
-const refresh_access_token = async (refreshToken) => {
+const refresh_access_token = async (uid, refreshToken) => {
     try {
-        const access_token_obj = await tradeRefreshTokenForAccessToken(refresh_token);
+        const access_token_obj = await tradeRefreshTokenForAccessToken(refreshToken);
+        console.log("Got access token obj:")
+        console.log(access_token_obj)
 
         // Update access and refresh token in database
         try {
@@ -181,6 +218,7 @@ const refresh_access_token = async (refreshToken) => {
 }
 
 const tradeRefreshTokenForAccessToken = (refreshToken) => {
+    console.log("Trading refresh token for access token.")
 
     // Adapted from https://stackoverflow.com/a/57119131
 
