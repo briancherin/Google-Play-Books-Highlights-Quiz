@@ -15,6 +15,7 @@ import { alt_client_id } from "./api/credentials.json";
 import { initializeDriveApi } from "./api/googleDrive/gdriveNotesHelper";
 
 import jwt_decode from "jwt-decode";
+import { BookDetails } from "./screens/BookDetails/BookDetails";
 
 
 Firebase.initialize();
@@ -111,6 +112,7 @@ const Router = () => {
                     {/*<Route exact path={ROUTES.ROUTE_HOME} component={App}/>*/}
                     {/*<Route exact path={ROUTES.ROUTE_LOGIN} component={LoginScreen} />*/}
                     <Route exact path={ROUTES.ROUTE_BROWSE} component={HighlightsBrowser} />
+                    <Route path={ROUTES.ROUTE_BOOK_DETAILS} component={BookDetails} />
                 </Switch>
             </BrowserRouter>
         </GoogleOAuthProvider>

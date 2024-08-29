@@ -14,6 +14,8 @@ import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import AppHeader from "../../Components/AppHeader";
 import { makeStyles } from "@material-ui/core/styles";
+import IconButton from "@material-ui/core/IconButton";
+import MoreHorizIcon from "@material-ui/icons/MoreHoriz";
 // import Pagination from "@material-ui/lab/Pagination";
 
 const useStyles = makeStyles({
@@ -104,15 +106,24 @@ export const HighlightsBrowser = () => {
                                         <Divider />
                                         <ListItem button onClick={() => handleClick(index, bookGroup)}>
                                             <ListItemText primary={title}/>
+
                                         </ListItem>
+
                                         <Collapse in={collapseList[index]}>
                                             {
-                                                quotesData[index] && quotesData[index].map((quoteObject, index2) => {
-                                                    return <div>
-                                                        <HighlightBox key={index2} style={{margin: 10}} highlightedQuote={quoteObject} showDate showBookLink/>
-                                                        <Divider style={{backgroundColor: "white"}}/>
-                                                    </div>
-                                                })
+                                                [
+                                                    <IconButton>
+                                                        <a href={`/book?title=${title}`} style={{textDecoration: "none", color:"inherit"}}>
+                                                            <MoreHorizIcon />
+                                                        </a>
+                                                    </IconButton>,
+                                                    (quotesData[index] && quotesData[index].map((quoteObject, index2) => {
+                                                        return <div>
+                                                            <HighlightBox key={index2} style={{margin: 10}} highlightedQuote={quoteObject} showDate showBookLink/>
+                                                            <Divider style={{backgroundColor: "white"}}/>
+                                                        </div>
+                                                    }))
+                                                ]
 
 
                                             }
