@@ -39,15 +39,21 @@ export const HighlightsBrowser = () => {
     const [ currPage, setCurrPage ] = useState(1);
     const [ collapseList, setCollapseList ] = useState({});
     const [ searchText, setSearchText ] = useState("");
+    const [ quotesData, setQuotesData ] = useState({});
 
-    const handleClick = (index) => {
-        const copy = {...collapseList};
-        if (!(index in collapseList)) {
-            copy[index] = true;
-        } else {
-            copy[index] = !copy[index];
+    const handleClick = (index, bookGroup) => {
+        setCollapseList(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+
+        // Load quotes if they haven't been loded yet
+        if (!quotesData[index]) {
+            setQuotesData(prev => ({
+                ...prev,
+                [index]: bookGroup.quotes.map(quoteJson => HighlightedQuote.fromJson(quoteJson))
+            }));
         }
-        setCollapseList(copy);
     }
 
     const handlePaginationChange = (event, value) => {
@@ -56,13 +62,15 @@ export const HighlightsBrowser = () => {
     }
 
     const handleSearch = (event) => {
-        setCurrPage(1);
         setSearchText(event.target.value);
+        setCurrPage(1);
     }
 
     const filteredQuotesList = searchText !== ""
         ? quotesList.filter((item) => item.title.toLowerCase().includes(searchText.toLowerCase()))
         : quotesList;
+
+    console.log("Filtered list: ", filteredQuotesList)
 
     const numPages = Math.ceil(filteredQuotesList.length / itemsPerPage);
 
@@ -94,19 +102,19 @@ export const HighlightsBrowser = () => {
                                 return (
                                     <div key={index}>
                                         <Divider />
-                                        <ListItem button onClick={() => handleClick(index)}>
+                                        <ListItem button onClick={() => handleClick(index, bookGroup)}>
                                             <ListItemText primary={title}/>
                                         </ListItem>
                                         <Collapse in={collapseList[index]}>
                                             {
-                                                quotes.map((quoteJson, index2) => {
-                                                    const quoteObject = HighlightedQuote.fromJson(quoteJson);
-                                                    // return <ListItem key={index2}>{quoteObject.quoteText}</ListItem>
+                                                quotesData[index] && quotesData[index].map((quoteObject, index2) => {
                                                     return <div>
                                                         <HighlightBox key={index2} style={{margin: 10}} highlightedQuote={quoteObject} showDate showBookLink/>
                                                         <Divider style={{backgroundColor: "white"}}/>
                                                     </div>
                                                 })
+
+
                                             }
                                         </Collapse>
                                     </div>
